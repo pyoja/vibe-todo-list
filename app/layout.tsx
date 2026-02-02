@@ -5,8 +5,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Vibe Todo List",
-  description: "A fast and beautiful todo list app",
+  title: "하루의 조각",
+  description: "당신의 하루를 채우는 작은 조각들",
 };
 
 export default function RootLayout({
