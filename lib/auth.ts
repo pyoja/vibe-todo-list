@@ -31,6 +31,12 @@ const baseURL =
 // by jh 20260121: better-auth 설정 및 Supabase(Postgres) 어댑터 연결
 export const auth = betterAuth({
   baseURL,
+  // by jh 20260202: Origin Mismatch 해결을 위한 신뢰할 수 있는 도메인 명시
+  // VERCEL_URL이 실제 접속 도메인(alias)과 다를 수 있어 추가 필요
+  trustedOrigins: [
+    "https://vibe-todo-list-brown.vercel.app", // 현재 사용 중인 Vercel Alias
+    "http://localhost:3000",
+  ],
   debug: true, // 에러 디버깅을 위해 추가
   database: {
     dialect, // adapter/provider 대신 dialect 직접 주입
