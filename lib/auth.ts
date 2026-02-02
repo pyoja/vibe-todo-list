@@ -21,8 +21,16 @@ const dialect = new PostgresDialect({
   pool,
 });
 
+// by jh 20260202: Vercel 배포 환경 대응을 위한 baseURL 동적 설정
+const baseURL =
+  process.env.BETTER_AUTH_URL ||
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
 // by jh 20260121: better-auth 설정 및 Supabase(Postgres) 어댑터 연결
 export const auth = betterAuth({
+  baseURL,
   debug: true, // 에러 디버깅을 위해 추가
   database: {
     dialect, // adapter/provider 대신 dialect 직접 주입
