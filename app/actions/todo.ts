@@ -15,6 +15,7 @@ export type Todo = {
   dueDate?: Date | null;
   folderName?: string;
   folderColor?: string;
+  order: number;
 };
 
 async function getSession() {
@@ -42,9 +43,9 @@ export async function getTodos(folderId?: string): Promise<Todo[]> {
       params.push(folderId);
     }
 
-    // 정렬: 마감일 임박순, 그 다음 중요도, 그 다음 생성일
-    query +=
-      ' ORDER BY t."isCompleted" ASC, t."dueDate" ASC NULLS LAST, t."createdAt" DESC';
+    // 정렬: 완료 여부(미완료 우선) -> 사용자 지정 순서(order) -> 생성일(최신순)
+    // order 컬럼이 새로 추가되었으므로 0일 수 있음.
+    query += ' ORDER BY t."isCompleted" ASC, t."order" ASC, t."createdAt" DESC';
 
     const res = await pool.query(query, params);
     return res.rows;
@@ -95,7 +96,7 @@ export async function updateTodo(
       .map((field, idx) => `"${field}" = $${idx + 1}`)
       .join(", ");
     const values = fields.map(
-      (field) => (updates as Record<string, any>)[field],
+      (field) => updates[field as keyof typeof updates],
     );
     const query = `UPDATE todo SET ${setClause} WHERE id = $${fields.length + 1} AND "userId" = $${fields.length + 2} RETURNING *`;
 
@@ -112,6 +113,7 @@ export async function toggleTodo(id: string, isCompleted: boolean) {
   return updateTodo(id, { isCompleted });
 }
 
+// ... (deleteTodo function)
 export async function deleteTodo(id: string) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
@@ -125,5 +127,26 @@ export async function deleteTodo(id: string) {
   } catch (error) {
     console.error("Failed to delete todo:", error);
     throw new Error("Failed to delete todo");
+  }
+}
+
+export async function reorderTodos(items: { id: string; order: number }[]) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  try {
+    // 트랜잭션 대신 병렬 처리로 성능 우선
+    await Promise.all(
+      items.map((item) =>
+        pool.query(
+          'UPDATE todo SET "order" = $1 WHERE id = $2 AND "userId" = $3',
+          [item.order, item.id, session.user.id],
+        ),
+      ),
+    );
+    revalidatePath("/");
+  } catch (error) {
+    console.error("Failed to reorder todos:", error);
+    throw new Error("Failed to reorder todos");
   }
 }

@@ -13,21 +13,21 @@ import {
   toggleTodo,
   deleteTodo,
   updateTodo,
+  reorderTodos,
   type Todo,
 } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Check,
-  Trash2,
   Plus,
   Loader2,
   Calendar as CalendarIcon,
   Search,
   X,
   Folder as FolderIcon,
-  FolderOpen,
+  LayoutList,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
@@ -43,19 +43,35 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format, isToday, isTomorrow, isPast } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { ko } from "date-fns/locale";
+
+// DnD Imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { SortableTodoItem } from "@/components/sortable-todo-item";
+import { CalendarView } from "@/components/calendar-view";
+
+// Animation & Interaction
+import { toast } from "sonner";
+import confetti from "canvas-confetti";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface TodoListProps {
   initialTodos: Todo[];
@@ -103,6 +119,10 @@ export function TodoList({
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
+  const [view, setView] = useState<"list" | "calendar">("list");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date(),
+  );
 
   const [optimisticTodos, addOptimisticTodo] = useOptimistic(
     initialTodos,
@@ -112,7 +132,8 @@ export function TodoList({
         | Todo
         | { type: "delete"; id: string }
         | { type: "toggle"; id: string; isCompleted: boolean }
-        | { type: "update"; id: string; updates: Partial<Todo> },
+        | { type: "update"; id: string; updates: Partial<Todo> }
+        | { type: "reorder"; newTodos: Todo[] },
     ) => {
       // Handle actions
       if ("type" in newTodo) {
@@ -131,6 +152,9 @@ export function TodoList({
             t.id === newTodo.id ? { ...t, ...newTodo.updates } : t,
           );
         }
+        if (newTodo.type === "reorder") {
+          return newTodo.newTodos;
+        }
         return state;
       }
       return [newTodo, ...state];
@@ -139,17 +163,34 @@ export function TodoList({
 
   const filteredTodos = useMemo(() => {
     return optimisticTodos.filter((todo) => {
+      // 1. Search filter
       if (
         searchTerm &&
         !todo.content.toLowerCase().includes(searchTerm.toLowerCase())
       ) {
         return false;
       }
+
+      // 2. Calendar View Date Filter
+      if (view === "calendar" && selectedDate) {
+        if (!todo.dueDate) return false;
+        if (!isSameDay(new Date(todo.dueDate), selectedDate)) return false;
+      }
+
+      // 3. Status filter
       if (filter === "active" && todo.isCompleted) return false;
       if (filter === "completed" && !todo.isCompleted) return false;
       return true;
     });
-  }, [optimisticTodos, searchTerm, filter]);
+  }, [optimisticTodos, searchTerm, filter, view, selectedDate]);
+
+  // DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   async function handleAdd(formData: FormData) {
     const content = formData.get("content") as string;
@@ -159,7 +200,9 @@ export function TodoList({
     formRef.current?.reset();
 
     const currentPriority = priority;
-    const currentDueDate = dueDate;
+    // If in calendar view, use selectedDate as default dueDate
+    const currentDueDate = view === "calendar" ? selectedDate : dueDate;
+
     setPriority("medium");
     setDueDate(undefined);
 
@@ -173,6 +216,7 @@ export function TodoList({
       folderId: folderId || null,
       priority: currentPriority,
       dueDate: currentDueDate || null,
+      order: Date.now(), // Newest on top or adjust as needed
     };
 
     startTransition(() => {
@@ -181,8 +225,10 @@ export function TodoList({
 
     try {
       await createTodo(content, folderId, currentPriority, currentDueDate);
+      toast.success("할 일이 추가되었습니다.");
     } catch (e) {
       console.error(e);
+      toast.error("할 일 추가에 실패했습니다.");
     } finally {
       setIsPending(false);
     }
@@ -193,14 +239,44 @@ export function TodoList({
     startTransition(() => {
       addOptimisticTodo({ type: "toggle", id, isCompleted: newStatus });
     });
+
+    if (newStatus) {
+      // Confetti effect on completion
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    }
+
     await toggleTodo(id, newStatus);
   }
 
+  // Undo Delete Logic
   async function handleDelete(id: string) {
-    if (!confirm("정말 삭제하시겠습니까?")) return;
+    // Optimistically remove
     startTransition(() => {
       addOptimisticTodo({ type: "delete", id });
     });
+
+    // Show Undo Toast
+    toast("할 일이 삭제되었습니다.", {
+      action: {
+        label: "실행 취소",
+        onClick: async () => {
+          // Todo: Undo logic requires restore action or soft delete.
+          // For now, inform user.
+          toast.dismiss();
+          alert(
+            "실행 취소 기능은 준비 중입니다. 삭제된 데이터는 복구되지 않았습니다.",
+          );
+        },
+      },
+      duration: 3000,
+      description: "되돌리려면 실행 취소를 누르세요.",
+    });
+
+    // Direct Delete (No Confirm)
     await deleteTodo(id);
   }
 
@@ -234,60 +310,48 @@ export function TodoList({
     await updateTodo(id, { folderId: newFolderId });
   }
 
-  const getDueDateLabel = (date: Date) => {
-    if (isToday(date)) return "오늘까지";
-    if (isTomorrow(date)) return "내일까지";
-    return format(date, "M월 d일까지", { locale: ko });
-  };
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
 
-  const getDueDateColor = (date: Date, isCompleted: boolean) => {
-    if (isCompleted) return "text-zinc-400";
-    if (isPast(date) && !isToday(date)) return "text-red-500 font-medium";
-    if (isToday(date)) return "text-amber-500 font-medium";
-    return "text-zinc-500 dark:text-zinc-400";
-  };
+    if (active.id !== over?.id) {
+      const oldIndex = optimisticTodos.findIndex((t) => t.id === active.id);
+      const newIndex = optimisticTodos.findIndex((t) => t.id === over?.id);
 
-  const FolderMenuContent = ({ todoId }: { todoId: string }) => (
-    <>
-      <DropdownMenuLabel>이동할 폴더 선택</DropdownMenuLabel>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => handleFolderChange(todoId, null)}>
-        <FolderOpen className="w-4 h-4 mr-2 text-zinc-400" />
-        <span>Inbox (미분류)</span>
-      </DropdownMenuItem>
-      {folders.map((f) => (
-        <DropdownMenuItem
-          key={f.id}
-          onClick={() => handleFolderChange(todoId, f.id)}
-        >
-          <div
-            className={cn(
-              "w-2 h-2 rounded-full mr-2",
-              f.color?.startsWith("bg-")
-                ? f.color
-                : FOLDER_COLORS[f.color || "blue-500"]?.split(" ")[0] ||
-                    "bg-blue-500", // Extract bg class from FOLDER_COLORS
-            )}
-          />
-          {f.name}
-        </DropdownMenuItem>
-      ))}
-    </>
-  );
+      const newTodos = arrayMove(optimisticTodos, oldIndex, newIndex);
+
+      // Optimistic update
+      startTransition(() => {
+        addOptimisticTodo({ type: "reorder", newTodos });
+      });
+
+      // Calculate new orders and sync with server
+      // Using index based ordering strategy
+      const updates = newTodos.map((todo, index) => ({
+        id: todo.id,
+        order: (index + 1) * 1000, // Giving some space between items
+      }));
+
+      // Call server action
+      reorderTodos(updates).catch((err) => {
+        console.error("Reorder failed", err);
+        toast.error("순서 변경 저장에 실패했습니다.");
+      });
+    }
+  }
 
   return (
     <div className="w-full max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col gap-1 mb-4">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+      <div className="flex flex-col gap-1 mb-8">
+        <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white">
           안녕하세요, {user.name}님!
         </h1>
-        <p className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-lg text-zinc-500 dark:text-zinc-400 font-medium">
           오늘 하루를 조각조각 채워보세요. 🧩
         </p>
       </div>
 
-      {/* Control Bar (Search & Filter) */}
+      {/* Control Bar (Search & Filter & View Toggle) */}
       <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl p-2 shadow-sm border border-zinc-200/50 dark:border-zinc-800/50 sticky top-20 z-40 transition-all flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
@@ -295,7 +359,7 @@ export function TodoList({
             placeholder="무엇을 찾고 계신가요?"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-9 bg-zinc-50/50 dark:bg-zinc-800/50 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all"
+            className="pl-9 h-9 bg-zinc-50/50 dark:bg-zinc-800/50 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all font-medium"
           />
           {searchTerm && (
             <button
@@ -306,25 +370,56 @@ export function TodoList({
             </button>
           )}
         </div>
-        <Tabs
-          value={filter}
-          onValueChange={(v: string) =>
-            setFilter(v as "all" | "active" | "completed")
-          }
-          className="w-full sm:w-auto"
-        >
-          <TabsList className="grid w-full grid-cols-3 h-9 bg-zinc-100 dark:bg-zinc-800">
-            <TabsTrigger value="all" className="text-xs">
-              전체
-            </TabsTrigger>
-            <TabsTrigger value="active" className="text-xs">
-              진행중
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="text-xs">
-              완료
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+
+        <div className="flex items-center gap-2">
+          {/* View Toggle */}
+          <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 flex items-center shrink-0 h-9">
+            <button
+              onClick={() => setView("list")}
+              className={cn(
+                "p-1.5 rounded-md transition-all h-7 w-7 flex items-center justify-center",
+                view === "list"
+                  ? "bg-white dark:bg-black shadow-sm text-blue-600"
+                  : "text-zinc-400 hover:text-zinc-600",
+              )}
+              title="리스트 보기"
+            >
+              <LayoutList className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setView("calendar")}
+              className={cn(
+                "p-1.5 rounded-md transition-all h-7 w-7 flex items-center justify-center",
+                view === "calendar"
+                  ? "bg-white dark:bg-black shadow-sm text-blue-600"
+                  : "text-zinc-400 hover:text-zinc-600",
+              )}
+              title="캘린더 보기"
+            >
+              <CalendarDays className="w-4 h-4" />
+            </button>
+          </div>
+
+          <Tabs
+            value={filter}
+            onValueChange={(v: string) =>
+              setFilter(v as "all" | "active" | "completed")
+            }
+            className="w-full sm:w-auto"
+          >
+            <TabsList className="grid w-auto grid-cols-3 h-9 bg-zinc-100 dark:bg-zinc-800">
+              <TabsTrigger value="all" className="text-xs font-bold px-3">
+                전체
+              </TabsTrigger>
+              <TabsTrigger value="active" className="text-xs font-bold px-3">
+                진행중
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs font-bold px-3">
+                완료
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       <ProgressBar
@@ -332,24 +427,55 @@ export function TodoList({
         completed={optimisticTodos.filter((t) => t.isCompleted).length}
       />
 
+      {/* Calendar View Area */}
+      <AnimatePresence mode="popLayout">
+        {view === "calendar" && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 overflow-hidden"
+          >
+            <CalendarView
+              todos={optimisticTodos}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
+            <div className="flex items-center gap-2 mt-4 px-2">
+              <div className="h-px bg-zinc-200 dark:bg-zinc-800 flex-1" />
+              <span className="text-xs font-medium text-zinc-400">
+                {selectedDate
+                  ? format(selectedDate, "M월 d일", { locale: ko })
+                  : "날짜를 선택하세요"}
+              </span>
+              <div className="h-px bg-zinc-200 dark:bg-zinc-800 flex-1" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Smart Input Section */}
       <div className="relative group z-10">
         <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
         <form
           ref={formRef}
           action={handleAdd}
-          className="relative flex flex-col gap-3 bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm"
+          className="relative flex flex-col gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-lg shadow-blue-500/5 transition-shadow hover:shadow-blue-500/10"
         >
           <Input
             ref={inputRef}
             name="content"
-            placeholder="새로운 조각을 추가하세요..."
-            className="border-0 focus-visible:ring-0 bg-transparent text-lg font-medium p-0 h-auto placeholder:text-zinc-400"
+            placeholder={
+              view === "calendar" && selectedDate
+                ? `${format(selectedDate, "M월 d일", { locale: ko })}에 할 일을 추가하세요`
+                : "오늘 어떤 멋진 일을 계획하고 계신가요?"
+            }
+            className="border-0 focus-visible:ring-0 bg-transparent text-xl font-medium p-0 h-auto placeholder:text-zinc-400 dark:placeholder:text-zinc-500 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal"
             autoComplete="off"
             disabled={isPending}
           />
 
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/50">
+          <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
             <div className="flex items-center gap-2">
               <Select
                 value={priority}
@@ -377,37 +503,40 @@ export function TodoList({
                 </SelectContent>
               </Select>
 
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
-                      dueDate &&
-                        "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
-                    )}
-                  >
-                    <CalendarIcon className={cn("w-3.5 h-3.5 mr-1.5")} />
-                    {dueDate
-                      ? format(dueDate, "M월 d일", { locale: ko })
-                      : "마감일"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={(date) => {
-                      setDueDate(date);
-                      setIsCalendarOpen(false);
-                    }}
-                    initialFocus
-                    locale={ko}
-                  />
-                </PopoverContent>
-              </Popover>
+              {/* Date Picker (Hidden in Calendar Mode usually, but let's keep it for flexibility) */}
+              {view !== "calendar" && (
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+                        dueDate &&
+                          "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+                      )}
+                    >
+                      <CalendarIcon className={cn("w-3.5 h-3.5 mr-1.5")} />
+                      {dueDate
+                        ? format(dueDate, "M월 d일", { locale: ko })
+                        : "마감일"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={(date) => {
+                        setDueDate(date);
+                        setIsCalendarOpen(false);
+                      }}
+                      initialFocus
+                      locale={ko}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
 
             <Button
@@ -426,167 +555,59 @@ export function TodoList({
         </form>
       </div>
 
-      {/* Todo List */}
-      <div className="space-y-3 pb-20">
-        {optimisticTodos.length === 0 ? (
-          <EmptyState onAddClick={() => inputRef.current?.focus()} />
-        ) : filteredTodos.length === 0 ? (
-          <div className="text-center py-12 text-zinc-400 bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
-            <FolderIcon className="w-10 h-10 mx-auto mb-3 opacity-20" />
-            <p className="text-sm">검색 결과가 없습니다.</p>
-          </div>
-        ) : (
-          <ul className="grid gap-3">
-            {filteredTodos.map((todo) => (
-              <li
-                key={todo.id}
-                className={cn(
-                  "group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/50 shadow-sm transition-all duration-300 hover:shadow-md hover:border-zinc-200 dark:hover:border-zinc-700",
-                  todo.isCompleted &&
-                    "bg-zinc-50/50 dark:bg-zinc-900/30 opacity-60 grayscale-[0.5]",
-                )}
-              >
-                <div className="flex items-start gap-3 flex-1 min-w-0 pr-4">
-                  {/* Checkbox */}
-                  <button
-                    onClick={() => handleToggle(todo.id, todo.isCompleted)}
-                    className={cn(
-                      "mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200",
-                      todo.isCompleted
-                        ? "bg-blue-500 border-blue-500 text-white"
-                        : "border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400",
-                    )}
-                  >
-                    {todo.isCompleted && <Check className="w-3 h-3" />}
-                  </button>
-
-                  <div className="flex flex-col gap-1.5 min-w-0 w-full">
-                    {/* Content */}
-                    <span
-                      className={cn(
-                        "text-base transition-all duration-200 select-none cursor-pointer truncate font-medium",
-                        todo.isCompleted
-                          ? "text-zinc-400 line-through decoration-zinc-300"
-                          : "text-zinc-700 dark:text-zinc-200",
-                      )}
-                      onClick={() => handleToggle(todo.id, todo.isCompleted)}
-                    >
-                      {todo.content}
-                    </span>
-
-                    {/* Meta Tags */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      {/* Priority */}
-                      {todo.priority && todo.priority !== "medium" && (
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            "px-1.5 py-0 h-5 font-normal text-[10px] bg-white border pointer-events-none gap-1",
-                            todo.priority === "high"
-                              ? "text-red-500 border-red-100"
-                              : "text-zinc-500 border-zinc-100",
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              todo.priority === "high"
-                                ? "bg-red-500"
-                                : "bg-zinc-400",
-                            )}
-                          />
-                          {todo.priority === "high" ? "중요" : "낮음"}
-                        </Badge>
-                      )}
-
-                      {/* Folder Badge & Move Action */}
-                      {todo.folderName ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Badge
-                              variant="secondary"
-                              className={cn(
-                                "px-2 py-0 h-5 font-medium text-[10px] border-0 cursor-pointer hover:opacity-80 transition-opacity",
-                                FOLDER_COLORS[todo.folderColor || "blue-500"] ||
-                                  FOLDER_COLORS["blue-500"],
-                              )}
-                            >
-                              {todo.folderName}
-                            </Badge>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start">
-                            <FolderMenuContent todoId={todo.id} />
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : null}
-
-                      {/* Due Date */}
-                      {todo.dueDate && (
-                        <div
-                          className={cn(
-                            "flex items-center gap-1 text-xs",
-                            getDueDateColor(
-                              new Date(todo.dueDate),
-                              todo.isCompleted,
-                            ),
-                          )}
-                        >
-                          <CalendarIcon className="w-3 h-3" />
-                          <span>{getDueDateLabel(new Date(todo.dueDate))}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="mt-4 sm:mt-0 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-                  {/* Folder Move Button (Visible in Action Area) */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-md transition-colors"
-                        title="이동"
-                      >
-                        <FolderIcon className="w-4 h-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <FolderMenuContent todoId={todo.id} />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <Select
-                    value={todo.priority || "medium"}
-                    onValueChange={(val: string) =>
-                      handlePriorityChange(
-                        todo.id,
-                        val as "low" | "medium" | "high",
-                      )
-                    }
-                  >
-                    <SelectTrigger className="h-7 text-[10px] w-auto border-transparent bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 focus:ring-0 px-2 rounded-md">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">낮음</SelectItem>
-                      <SelectItem value="medium">보통</SelectItem>
-                      <SelectItem value="high">높음</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <button
-                    onClick={() => handleDelete(todo.id)}
-                    className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* Todo List - DnD Context */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToVerticalAxis]}
+      >
+        <div className="space-y-3 pb-20">
+          {optimisticTodos.length === 0 ? (
+            <EmptyState onAddClick={() => inputRef.current?.focus()} />
+          ) : filteredTodos.length === 0 ? (
+            <div className="text-center py-12 text-zinc-400 bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+              {view === "calendar" ? (
+                <>
+                  <CalendarIcon className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">
+                    {selectedDate
+                      ? `${format(selectedDate, "M월 d일", { locale: ko })}에 계획된 일이 없네요.`
+                      : "날짜를 선택해주세요."}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <FolderIcon className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                  <p className="text-sm">검색 결과가 없습니다.</p>
+                </>
+              )}
+            </div>
+          ) : (
+            <SortableContext
+              items={filteredTodos.map((t) => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="grid gap-3">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {filteredTodos.map((todo) => (
+                    <SortableTodoItem
+                      key={todo.id}
+                      todo={todo}
+                      folders={folders}
+                      FOLDER_COLORS={FOLDER_COLORS}
+                      onToggle={handleToggle}
+                      onDelete={handleDelete}
+                      onPriorityChange={handlePriorityChange}
+                      onFolderChange={handleFolderChange}
+                    />
+                  ))}
+                </AnimatePresence>
+              </ul>
+            </SortableContext>
+          )}
+        </div>
+      </DndContext>
     </div>
   );
 }

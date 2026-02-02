@@ -1,8 +1,14 @@
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+import { cn } from "@/lib/utils";
+import { Noto_Sans_KR } from "next/font/google";
+import { Toaster } from "sonner";
+
+const fontSans = Noto_Sans_KR({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 
 export const metadata = {
   title: "하루조각 - 당신의 하루를 정리하세요",
@@ -11,12 +17,18 @@ export const metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="ko" suppressHydrationWarning>
+      <head />
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          fontSans.variable,
+        )}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -24,6 +36,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
