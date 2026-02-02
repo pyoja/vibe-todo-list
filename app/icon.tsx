@@ -25,16 +25,19 @@ export default function Icon() {
       }}
     >
       <svg
-        width="20"
-        height="20"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <polyline points="20 6 9 17 4 12" />
+        <path d="M10 13a3 3 0 0 0-3-3h0a3 3 0 0 0-3 3v0a3 3 0 0 0 3 3h0a3 3 0 0 0 3-3Z" />
+        <path d="M14 11a3 3 0 0 0 3 3h0a3 3 0 0 0 3-3v0a3 3 0 0 0-3-3h0a3 3 0 0 0-3 3Z" />
+        <path d="M14 11V7a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4" />
+        <path d="M10 13v4a2 2 0 0 0 2 2v0a2 2 0 0 0 2-2v-4" />
       </svg>
     </div>,
     {

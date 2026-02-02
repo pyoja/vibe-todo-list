@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Puzzle } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -33,9 +33,9 @@ export default async function Page({
         <header className="px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-xl sticky top-0 z-50">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
             <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-              <CheckCircle2 className="w-5 h-5" />
+              <Puzzle className="w-5 h-5" />
             </div>
-            Vibe Todo
+            하루조각
           </div>
           <div className="flex gap-4 items-center">
             <ModeToggle />
@@ -62,9 +62,9 @@ export default async function Page({
       <header className="px-6 h-16 flex items-center justify-between border-b border-slate-100 dark:border-zinc-900/50">
         <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
           <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-            <CheckCircle2 className="w-5 h-5" />
+            <Puzzle className="w-5 h-5" />
           </div>
-          Vibe Todo
+          하루조각
         </div>
         <div className="flex gap-4 items-center">
           <ModeToggle />
@@ -85,13 +85,13 @@ export default async function Page({
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1] animate-in fade-in slide-in-from-bottom-6 duration-700 fill-mode-both delay-100">
             당신의 하루를 <br className="hidden sm:block" />
-            <span className="text-blue-600">완벽하게 정리하세요</span>
+            <span className="text-blue-600">조각조각 완성해보세요</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both delay-200">
             복잡한 기능은 덜어내고, 꼭 필요한 것만 남겼습니다.
             <br />
-            Vibe Todo와 함께 물 흐르듯 자연스러운 업무 관리를 시작해보세요.
+            하루조각과 함께 소중한 일상을 기록하고 관리하세요.
           </p>
 
           <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-10 duration-700 fill-mode-both delay-300">
@@ -119,7 +119,7 @@ export default async function Page({
 
       {/* Footer */}
       <footer className="py-8 text-center text-sm text-slate-500 dark:text-slate-600">
-        © 2026 Vibe Todo List. All rights reserved.
+        © 2026 하루조각. All rights reserved.
       </footer>
     </div>
   );
