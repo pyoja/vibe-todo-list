@@ -32,19 +32,113 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Check,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface SidebarProps {
   initialFolders: Folder[];
+  className?: string;
 }
 
-export function Sidebar({ initialFolders }: SidebarProps) {
+const FOLDER_COLORS = [
+  {
+    name: "Blue",
+    value: "blue-500",
+    class: "text-blue-500",
+    bg: "bg-blue-500",
+  },
+  { name: "Red", value: "red-500", class: "text-red-500", bg: "bg-red-500" },
+  {
+    name: "Orange",
+    value: "orange-500",
+    class: "text-orange-500",
+    bg: "bg-orange-500",
+  },
+  {
+    name: "Green",
+    value: "green-500",
+    class: "text-green-500",
+    bg: "bg-green-500",
+  },
+  {
+    name: "Purple",
+    value: "purple-500",
+    class: "text-purple-500",
+    bg: "bg-purple-500",
+  },
+  {
+    name: "Pink",
+    value: "pink-500",
+    class: "text-pink-500",
+    bg: "bg-pink-500",
+  },
+  {
+    name: "Slate",
+    value: "slate-500",
+    class: "text-slate-500",
+    bg: "bg-slate-500",
+  },
+];
+
+export function Sidebar({ initialFolders, className }: SidebarProps) {
+  return (
+    <aside
+      className={cn(
+        "hidden md:flex w-64 bg-slate-50/50 dark:bg-zinc-900/50 border-r border-slate-200 dark:border-zinc-800 flex-shrink-0 flex-col h-[calc(100vh-4rem)] sticky top-16 transition-all duration-300",
+        className,
+      )}
+    >
+      <SidebarContent initialFolders={initialFolders} />
+    </aside>
+  );
+}
+
+export function MobileSidebar({ initialFolders }: SidebarProps) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden -ml-2">
+          <Menu className="w-5 h-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0 w-72">
+        <SheetHeader className="px-4 py-4 border-b border-slate-100 dark:border-zinc-800">
+          <SheetTitle className="text-left flex items-center gap-2">
+            하루조각
+          </SheetTitle>
+        </SheetHeader>
+        <SidebarContent
+          initialFolders={initialFolders}
+          onNavigate={() => setOpen(false)}
+        />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+interface SidebarContentProps {
+  initialFolders: Folder[];
+  onNavigate?: () => void;
+}
+
+function SidebarContent({ initialFolders, onNavigate }: SidebarContentProps) {
   const searchParams = useSearchParams();
   const currentFolderId = searchParams.get("folderId");
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [newFolderColor, setNewFolderColor] = useState("blue-500");
 
   const [optimisticFolders, addOptimisticFolder] = useOptimistic(
     initialFolders,
@@ -78,17 +172,21 @@ export function Sidebar({ initialFolders }: SidebarProps) {
     setIsCreating(true);
     formRef.current?.reset();
 
+    const color = newFolderColor;
+    setNewFolderColor("blue-500");
+
     const tempFolder: Folder = {
       id: crypto.randomUUID(),
       name,
       userId: "optimistic",
       createdAt: new Date(),
+      color: color,
     };
 
     startTransition(async () => {
       addOptimisticFolder({ type: "add", folder: tempFolder });
       try {
-        await createFolder(name);
+        await createFolder(name, color);
       } catch (e) {
         console.error(e);
       } finally {
@@ -97,21 +195,20 @@ export function Sidebar({ initialFolders }: SidebarProps) {
     });
   }
 
-  const handleUpdate = async (id: string, newName: string) => {
+  const handleUpdate = async (
+    id: string,
+    newName: string,
+    newColor: string,
+  ) => {
     startTransition(async () => {
-      // Optimistic update logic is tricky here because we don't have the full folder object easily available
-      // without passing it around, but we can try to find it.
-      // For simplicity, we'll rely on server revalidation or try to construct optimistic object.
-      // Let's just create a dummy folder obj for optimistic update or skip it for now to avoid complexity errors.
-      // Actually, let's find the folder in optimisticFolders
       const folder = optimisticFolders.find((f) => f.id === id);
       if (folder) {
         addOptimisticFolder({
           type: "update",
-          folder: { ...folder, name: newName },
+          folder: { ...folder, name: newName, color: newColor },
         });
       }
-      await updateFolder(id, newName);
+      await updateFolder(id, { name: newName, color: newColor });
     });
   };
 
@@ -127,7 +224,7 @@ export function Sidebar({ initialFolders }: SidebarProps) {
   };
 
   return (
-    <aside className="w-64 bg-slate-50/50 dark:bg-zinc-900/50 border-r border-slate-200 dark:border-zinc-800 flex-shrink-0 flex flex-col h-[calc(100vh-4rem)] sticky top-16 transition-all duration-300">
+    <div className="flex flex-col h-full bg-slate-50/50 dark:bg-zinc-900/50">
       <div className="p-4 space-y-4 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between px-2 pb-2">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -148,33 +245,65 @@ export function Sidebar({ initialFolders }: SidebarProps) {
           <form
             ref={formRef}
             action={handleCreateFolder}
-            className="px-2 mb-2 animate-in slide-in-from-top-2 duration-200"
+            className="px-2 mb-2 p-3 bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 shadow-sm animate-in slide-in-from-top-2 duration-200 space-y-3"
           >
             <Input
               name="name"
               placeholder="Folder name"
-              className="h-8 text-sm bg-white dark:bg-zinc-900"
+              className="h-8 text-sm"
               autoFocus
-              onBlur={() => !isPending && setIsCreating(false)}
               autoComplete="off"
             />
+            <div className="flex flex-wrap gap-1.5">
+              {FOLDER_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setNewFolderColor(c.value)}
+                  className={cn(
+                    "w-4 h-4 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-slate-400",
+                    c.bg,
+                    newFolderColor === c.value
+                      ? "scale-110 ring-2 ring-offset-1 ring-slate-400"
+                      : "opacity-70 hover:opacity-100",
+                  )}
+                  title={c.name}
+                />
+              ))}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs"
+                onClick={() => setIsCreating(false)}
+              >
+                취소
+              </Button>
+              <Button type="submit" size="sm" className="h-7 text-xs">
+                생성
+              </Button>
+            </div>
           </form>
         )}
 
         <div className="space-y-1">
-          <Link href="/">
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start gap-2 h-9",
-                !currentFolderId &&
-                  "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-100",
-              )}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              전체 보기
-            </Button>
-          </Link>
+          <div onClick={onNavigate}>
+            <Link href="/">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-2 h-9",
+                  !currentFolderId &&
+                    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-100",
+                )}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                전체 보기
+              </Button>
+            </Link>
+          </div>
           {optimisticFolders.map((folder) => (
             <FolderItem
               key={folder.id}
@@ -182,11 +311,12 @@ export function Sidebar({ initialFolders }: SidebarProps) {
               isActive={currentFolderId === folder.id}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -195,21 +325,28 @@ function FolderItem({
   isActive,
   onUpdate,
   onDelete,
+  onNavigate,
 }: {
   folder: Folder;
   isActive: boolean;
-  onUpdate: (id: string, name: string) => Promise<void>;
+  onUpdate: (id: string, name: string, color: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onNavigate?: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newName, setNewName] = useState(folder.name);
+  const [newColor, setNewColor] = useState(folder.color || "blue-500");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const activeColor =
+    FOLDER_COLORS.find((c) => c.value === (folder.color || "blue-500")) ||
+    FOLDER_COLORS[0];
 
   const handleUpdateClick = async () => {
     setIsUpdating(true);
     try {
-      await onUpdate(folder.id, newName);
+      await onUpdate(folder.id, newName, newColor);
       setIsDialogOpen(false);
     } finally {
       setIsUpdating(false);
@@ -222,19 +359,30 @@ function FolderItem({
         className={cn(
           "group flex items-center justify-between w-full h-9 rounded-md px-4 transition-colors relative",
           isActive
-            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-100 font-medium"
+            ? cn(
+                "font-medium",
+                `bg-${activeColor.value.split("-")[0]}-100 text-${activeColor.value.split("-")[0]}-700`,
+                `dark:bg-${activeColor.value.split("-")[0]}-900/30 dark:text-${activeColor.value.split("-")[0]}-100`,
+              )
             : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-slate-300",
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Link
-          href={`/?folderId=${folder.id}`}
-          className="flex items-center gap-2 flex-1 min-w-0 h-full"
-        >
-          <FolderIcon className="w-4 h-4 flex-shrink-0" />
-          <span className="truncate text-sm">{folder.name}</span>
-        </Link>
+        <div onClick={onNavigate} className="flex-1 min-w-0 h-full">
+          <Link
+            href={`/?folderId=${folder.id}`}
+            className="flex items-center gap-2 w-full h-full"
+          >
+            <FolderIcon
+              className={cn(
+                "w-4 h-4 flex-shrink-0 transition-colors",
+                activeColor.class,
+              )}
+            />
+            <span className="truncate text-sm">{folder.name}</span>
+          </Link>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -251,11 +399,15 @@ function FolderItem({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
             <DropdownMenuItem
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => {
+                setNewName(folder.name);
+                setNewColor(folder.color || "blue-500");
+                setIsDialogOpen(true);
+              }}
               className="gap-2"
             >
               <Pencil className="w-3 h-3" />
-              <span>이름 변경</span>
+              <span>수정</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDelete(folder.id)}
@@ -269,17 +421,45 @@ function FolderItem({
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {/* ... Dialog Content ... (reuse previous code) */}
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>폴더 이름 변경</DialogTitle>
+            <DialogTitle>폴더 수정</DialogTitle>
           </DialogHeader>
-          <div className="py-2">
-            <Input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="폴더 이름"
-              className="col-span-3"
-            />
+          <div className="py-2 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-500">이름</label>
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="폴더 이름"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-500">색상</label>
+              <div className="flex flex-wrap gap-2">
+                {FOLDER_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setNewColor(c.value)}
+                    className={cn(
+                      "w-6 h-6 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 flex items-center justify-center",
+                      c.bg,
+                      newColor === c.value
+                        ? "ring-2 ring-offset-2 ring-slate-400 scale-110"
+                        : "opacity-70 hover:opacity-100",
+                    )}
+                    title={c.name}
+                  >
+                    {newColor === c.value && (
+                      <Check className="w-3 h-3 text-white" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button

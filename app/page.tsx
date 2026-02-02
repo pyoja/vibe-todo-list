@@ -7,10 +7,8 @@ import { headers } from "next/headers";
 import { TodoList } from "@/components/todo-list";
 import { getTodos } from "@/app/actions/todo";
 
-import { Sidebar } from "@/components/sidebar";
+import { Sidebar, MobileSidebar } from "@/components/sidebar";
 import { getFolders } from "@/app/actions/folder";
-
-// ... existing imports ...
 
 export default async function Page({
   searchParams,
@@ -31,11 +29,15 @@ export default async function Page({
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-black selection:bg-blue-100 dark:selection:bg-blue-900">
         <header className="px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
-            <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-              <Puzzle className="w-5 h-5" />
+          <div className="flex items-center gap-3 font-bold text-xl tracking-tight">
+            <MobileSidebar initialFolders={folders} />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
+                <Puzzle className="w-5 h-5" />
+              </div>
+              <span className="hidden sm:inline">하루조각</span>
+              <span className="sm:hidden">하루조각</span>
             </div>
-            하루조각
           </div>
           <div className="flex gap-4 items-center">
             <ModeToggle />
@@ -44,9 +46,10 @@ export default async function Page({
         </header>
         <div className="flex max-w-7xl mx-auto">
           <Sidebar initialFolders={folders} />
-          <main className="flex-1 py-10 px-6">
+          <main className="flex-1 py-4 sm:py-10 px-4 sm:px-6">
             <TodoList
               initialTodos={todos}
+              folders={folders}
               user={session.user}
               folderId={params?.folderId}
             />

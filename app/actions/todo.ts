@@ -13,6 +13,8 @@ export type Todo = {
   folderId?: string | null;
   priority?: "low" | "medium" | "high";
   dueDate?: Date | null;
+  folderName?: string;
+  folderColor?: string;
 };
 
 async function getSession() {
@@ -26,18 +28,23 @@ export async function getTodos(folderId?: string): Promise<Todo[]> {
   if (!session) return [];
 
   try {
-    let query = 'SELECT * FROM todo WHERE "userId" = $1';
-    // by jh 20260202: any 타입 제거 및 타입 안정성 확보
+    let query = `
+      SELECT t.*, f.name as "folderName", f.color as "folderColor"
+      FROM todo t
+      LEFT JOIN folder f ON t."folderId" = f.id
+      WHERE t."userId" = $1
+    `;
+    // by jh 20260202: 폴더 정보 Join 및 타입 안정성 확보
     const params: (string | null)[] = [session.user.id];
 
     if (folderId) {
-      query += ' AND "folderId" = $2';
+      query += ' AND t."folderId" = $2';
       params.push(folderId);
     }
 
     // 정렬: 마감일 임박순, 그 다음 중요도, 그 다음 생성일
     query +=
-      ' ORDER BY "isCompleted" ASC, "dueDate" ASC NULLS LAST, "createdAt" DESC';
+      ' ORDER BY t."isCompleted" ASC, t."dueDate" ASC NULLS LAST, t."createdAt" DESC';
 
     const res = await pool.query(query, params);
     return res.rows;
