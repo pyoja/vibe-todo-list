@@ -31,6 +31,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
+import confetti from "canvas-confetti";
+import useSound from "use-sound";
 import {
   Select,
   SelectContent,
@@ -70,7 +72,7 @@ import { CalendarView } from "@/components/calendar-view";
 
 // Animation & Interaction
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
+
 import { AnimatePresence, motion } from "framer-motion";
 
 interface TodoListProps {
@@ -234,22 +236,63 @@ export function TodoList({
     }
   }
 
-  async function handleToggle(id: string, currentStatus: boolean) {
-    const newStatus = !currentStatus;
-    startTransition(() => {
-      addOptimisticTodo({ type: "toggle", id, isCompleted: newStatus });
-    });
+  // Sound Effect
+  const [playPop] = useSound(
+    "https://pub-3626123a908346b095493b827f311c82.r2.dev/pop_c0c.mp3",
+    { volume: 0.5 },
+  );
 
-    if (newStatus) {
-      // Confetti effect on completion
+  // Confetti Logic
+  const triggerConfetti = () => {
+    const end = Date.now() + 1000;
+    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+
+    (function frame() {
       confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors,
       });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+  };
+
+  async function handleToggle(id: string, isCompleted: boolean) {
+    const todo = optimisticTodos.find((t) => t.id === id);
+    if (!todo) return;
+
+    // Play sound when checking
+    if (!isCompleted) {
+      playPop();
     }
 
-    await toggleTodo(id, newStatus);
+    startTransition(() => {
+      addOptimisticTodo({ type: "toggle", id, isCompleted: !isCompleted });
+    });
+
+    // Confetti Check: If we are completing the last active task
+    if (!isCompleted) {
+      const remaining = optimisticTodos.filter(
+        (t) => !t.isCompleted && t.id !== id,
+      ).length;
+      if (remaining === 0 && optimisticTodos.length > 0) {
+        triggerConfetti();
+      }
+    }
+
+    await toggleTodo(id, !isCompleted);
   }
 
   // Undo Delete Logic

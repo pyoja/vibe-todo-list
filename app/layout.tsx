@@ -2,12 +2,17 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { cn } from "@/lib/utils";
-import { Noto_Sans_KR } from "next/font/google";
+import { Noto_Sans_KR, Inter } from "next/font/google"; // 1. Import Inter
 import { Toaster } from "sonner";
 
 const fontSans = Noto_Sans_KR({
   subsets: ["latin"],
   variable: "--font-sans",
+});
+
+const fontInter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata = {
@@ -27,6 +32,7 @@ export default function RootLayout({
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable,
+          fontInter.variable, // 2. Add variable
         )}
       >
         <ThemeProvider

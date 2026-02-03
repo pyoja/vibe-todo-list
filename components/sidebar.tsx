@@ -103,7 +103,7 @@ export function Sidebar({ initialFolders, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden md:flex w-64 bg-slate-50/50 dark:bg-zinc-900/50 border-r border-slate-200 dark:border-zinc-800 flex-shrink-0 flex-col h-[calc(100vh-4rem)] sticky top-16 transition-all duration-300",
+        "hidden md:flex w-64 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl border-r border-white/20 dark:border-zinc-800/50 flex-shrink-0 flex-col h-[calc(100vh-4rem)] sticky top-16 transition-all duration-300 shadow-2xl z-50",
         className,
       )}
     >
@@ -145,7 +145,7 @@ interface SidebarContentProps {
 function SidebarContent({ initialFolders, onNavigate }: SidebarContentProps) {
   const searchParams = useSearchParams();
   const currentFolderId = searchParams.get("folderId");
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderColor, setNewFolderColor] = useState("blue-500");
@@ -230,7 +230,7 @@ function SidebarContent({ initialFolders, onNavigate }: SidebarContentProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/50 dark:bg-zinc-900/50">
+    <div className="flex flex-col h-full bg-transparent">
       <div className="p-4 space-y-4 flex-1 overflow-y-auto">
         <div className="flex items-center justify-between px-2 pb-2">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -300,9 +300,10 @@ function SidebarContent({ initialFolders, onNavigate }: SidebarContentProps) {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start gap-2 h-9",
-                  !currentFolderId &&
-                    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-100",
+                  "w-full justify-start gap-2 h-10 rounded-xl transition-all duration-200",
+                  !currentFolderId
+                    ? "bg-white dark:bg-zinc-800 shadow-md shadow-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold ring-1 ring-black/5 dark:ring-white/10"
+                    : "hover:bg-white/50 dark:hover:bg-zinc-800/50 hover:shadow-sm text-zinc-600 dark:text-zinc-400",
                 )}
               >
                 <LayoutGrid className="w-4 h-4" />
@@ -364,14 +365,14 @@ function FolderItem({
     <>
       <div
         className={cn(
-          "group flex items-center justify-between w-full h-9 rounded-md px-4 transition-colors relative",
+          "group flex items-center justify-between w-full h-10 rounded-xl px-4 transition-all duration-200 relative",
           isActive
             ? cn(
-                "font-medium",
-                `bg-${activeColor.value.split("-")[0]}-100 text-${activeColor.value.split("-")[0]}-700`,
-                `dark:bg-${activeColor.value.split("-")[0]}-900/30 dark:text-${activeColor.value.split("-")[0]}-100`,
+                "font-semibold shadow-md ring-1 ring-black/5 dark:ring-white/10",
+                `bg-white dark:bg-zinc-800 text-${activeColor.value.split("-")[0]}-600 dark:text-${activeColor.value.split("-")[0]}-400`,
+                `shadow-${activeColor.value.split("-")[0]}-500/10`,
               )
-            : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-slate-300",
+            : "hover:bg-white/50 dark:hover:bg-zinc-800/50 hover:shadow-sm text-zinc-600 dark:text-zinc-400",
         )}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
