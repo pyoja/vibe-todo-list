@@ -2,22 +2,15 @@
 
 import {
   useState,
-  useOptimistic,
   useRef,
-  startTransition,
   useMemo,
+  useOptimistic,
+  startTransition,
 } from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
-import {
-  createTodo,
-  toggleTodo,
-  deleteTodo,
-  updateTodo,
-  reorderTodos,
-  restoreTodo,
-  type Todo,
-} from "@/app/actions/todo";
+import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
+import { useTodoManager } from "@/hooks/use-todo-manager"; // Import Hook
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -78,7 +71,7 @@ import { AnimatePresence, motion } from "framer-motion";
 interface TodoListProps {
   initialTodos: Todo[];
   folders: Folder[];
-  user: {
+  user?: {
     id: string;
     email: string;
     name: string;
@@ -126,8 +119,18 @@ export function TodoList({
     new Date(),
   );
 
+  const {
+    todos: sourceTodos,
+    addTodo,
+    toggleTodo,
+    updateTodo,
+    deleteTodo,
+    restoreTodo,
+    reorderTodos,
+  } = useTodoManager({ initialTodos, userId: user?.id, folderId }); // Initialize Hook
+
   const [optimisticTodos, addOptimisticTodo] = useOptimistic(
-    initialTodos,
+    sourceTodos,
     (
       state,
       newTodo:
@@ -214,7 +217,7 @@ export function TodoList({
       content,
       isCompleted: false,
       createdAt: new Date(),
-      userId: user.id,
+      userId: user?.id || "guest", // Handle guest user
       folderId: folderId || null,
       priority: currentPriority,
       dueDate: currentDueDate || null,
@@ -226,7 +229,7 @@ export function TodoList({
     });
 
     try {
-      await createTodo(content, folderId, currentPriority, currentDueDate);
+      await addTodo(content, currentPriority, currentDueDate);
       toast.success("할 일이 추가되었습니다.");
     } catch (e) {
       console.error(e);
@@ -282,7 +285,11 @@ export function TodoList({
       addOptimisticTodo({ type: "toggle", id, isCompleted: !isCompleted });
     });
 
+    // Toggle via Hook
+    await toggleTodo(id, !isCompleted);
+
     // Confetti Check: If we are completing the last active task
+    // Note: We check against the current state before toggle
     if (!isCompleted) {
       const remaining = optimisticTodos.filter(
         (t) => !t.isCompleted && t.id !== id,
@@ -291,50 +298,37 @@ export function TodoList({
         triggerConfetti();
       }
     }
-
-    await toggleTodo(id, !isCompleted);
   }
 
-  // Undo Delete Logic
   // Undo Delete Logic
   async function handleDelete(id: string) {
     // Find todo to delete for restoration
     const todoToDelete = optimisticTodos.find((t) => t.id === id);
     if (!todoToDelete) return;
 
-    // Optimistically remove
-    startTransition(() => {
-      addOptimisticTodo({ type: "delete", id });
-    });
+    // Show Undo Toast BEFORE deleting (or immediately after, since hook handles optimistic update)
+    // The hook in guest mode updates immediately. Server mode might have slight delay but optimistic ui handles it.
+    // However, the hook doesn't expose a separate "optimistic" add/remove for DELETE restoration in the same way direct useOptimistic did.
+    // But useTodoManager handles state updates.
 
-    // Show Undo Toast
+    // We will call delete first to update UI
+    await deleteTodo(id);
+
     toast("할 일이 삭제되었습니다.", {
       action: {
         label: "실행 취소",
         onClick: async () => {
-          // Optimistically restore
-          startTransition(() => {
-            addOptimisticTodo(todoToDelete);
-          });
-          // Call server restore
           try {
             await restoreTodo(todoToDelete);
             toast.success("실행 취소되었습니다.");
           } catch (e) {
             console.error(e);
             toast.error("복구에 실패했습니다.");
-            // Re-delete on failure (rollback)
-            startTransition(() => {
-              addOptimisticTodo({ type: "delete", id });
-            });
           }
         },
       },
-      duration: 4000, // Give user a bit more time
+      duration: 4000,
     });
-
-    // Direct Delete (No Confirm)
-    await deleteTodo(id);
   }
 
   async function handlePriorityChange(
@@ -388,7 +382,7 @@ export function TodoList({
         order: (index + 1) * 1000, // Giving some space between items
       }));
 
-      // Call server action
+      // reorderTodos hook function handles it.
       reorderTodos(updates).catch((err) => {
         console.error("Reorder failed", err);
         toast.error("순서 변경 저장에 실패했습니다.");
@@ -400,7 +394,7 @@ export function TodoList({
     <div className="w-full max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Dashboard Header */}
       <DashboardHeader
-        userName={user.name}
+        userName={user?.name || "게스트"}
         totalTodos={optimisticTodos.length}
         completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
       />
