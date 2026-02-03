@@ -119,14 +119,48 @@ export async function deleteTodo(id: string) {
   if (!session) throw new Error("Unauthorized");
 
   try {
-    await pool.query('DELETE FROM todo WHERE id = $1 AND "userId" = $2', [
-      id,
-      session.user.id,
-    ]);
+    const res = await pool.query(
+      'DELETE FROM todo WHERE id = $1 AND "userId" = $2 RETURNING *',
+      [id, session.user.id],
+    );
     revalidatePath("/");
+    return res.rows[0];
   } catch (error) {
     console.error("Failed to delete todo:", error);
     throw new Error("Failed to delete todo");
+  }
+}
+
+export async function restoreTodo(todo: Todo) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  try {
+    // Restore with original ID and CreatedAt if possible, or new ones if conflict.
+    // Here we force insert including ID.
+    const query = `
+      INSERT INTO todo (id, content, "isCompleted", "createdAt", "userId", "folderId", priority, "dueDate", "order")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `;
+    const params = [
+      todo.id,
+      todo.content,
+      todo.isCompleted,
+      todo.createdAt,
+      session.user.id,
+      todo.folderId || null,
+      todo.priority || "medium",
+      todo.dueDate || null,
+      todo.order || 0,
+    ];
+
+    const res = await pool.query(query, params);
+    revalidatePath("/");
+    return res.rows[0];
+  } catch (error) {
+    console.error("Failed to restore todo:", error);
+    throw new Error("Failed to restore todo");
   }
 }
 

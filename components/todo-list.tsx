@@ -7,13 +7,14 @@ import {
   startTransition,
   useMemo,
 } from "react";
-import { ProgressBar } from "@/components/progress-bar";
+import { DashboardHeader } from "@/components/dashboard-header";
 import {
   createTodo,
   toggleTodo,
   deleteTodo,
   updateTodo,
   reorderTodos,
+  restoreTodo,
   type Todo,
 } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
@@ -25,7 +26,6 @@ import {
   Calendar as CalendarIcon,
   Search,
   X,
-  Folder as FolderIcon,
   LayoutList,
   CalendarDays,
 } from "lucide-react";
@@ -44,15 +44,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isSameDay } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -124,7 +115,6 @@ export function TodoList({
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [showUndoAlert, setShowUndoAlert] = useState(false);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -263,7 +253,12 @@ export function TodoList({
   }
 
   // Undo Delete Logic
+  // Undo Delete Logic
   async function handleDelete(id: string) {
+    // Find todo to delete for restoration
+    const todoToDelete = optimisticTodos.find((t) => t.id === id);
+    if (!todoToDelete) return;
+
     // Optimistically remove
     startTransition(() => {
       addOptimisticTodo({ type: "delete", id });
@@ -274,14 +269,25 @@ export function TodoList({
       action: {
         label: "실행 취소",
         onClick: async () => {
-          // Todo: Undo logic requires restore action or soft delete.
-          // For now, inform user.
-          toast.dismiss();
-          setShowUndoAlert(true);
+          // Optimistically restore
+          startTransition(() => {
+            addOptimisticTodo(todoToDelete);
+          });
+          // Call server restore
+          try {
+            await restoreTodo(todoToDelete);
+            toast.success("실행 취소되었습니다.");
+          } catch (e) {
+            console.error(e);
+            toast.error("복구에 실패했습니다.");
+            // Re-delete on failure (rollback)
+            startTransition(() => {
+              addOptimisticTodo({ type: "delete", id });
+            });
+          }
         },
       },
-      duration: 3000,
-      description: "되돌리려면 실행 취소를 누르세요.",
+      duration: 4000, // Give user a bit more time
     });
 
     // Direct Delete (No Confirm)
@@ -349,15 +355,12 @@ export function TodoList({
 
   return (
     <div className="w-full max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col gap-1 mb-8">
-        <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white">
-          안녕하세요, {user.name}님!
-        </h1>
-        <p className="text-lg text-zinc-500 dark:text-zinc-400 font-medium">
-          오늘 하루를 조각조각 채워보세요. 🧩
-        </p>
-      </div>
+      {/* Dashboard Header */}
+      <DashboardHeader
+        userName={user.name}
+        totalTodos={optimisticTodos.length}
+        completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
+      />
 
       {/* Control Bar (Search & Filter & View Toggle) */}
       <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl p-2 shadow-sm border border-zinc-200/50 dark:border-zinc-800/50 sticky top-20 z-40 transition-all flex flex-col sm:flex-row gap-2">
@@ -430,12 +433,6 @@ export function TodoList({
         </div>
       </div>
 
-      <ProgressBar
-        total={optimisticTodos.length}
-        completed={optimisticTodos.filter((t) => t.isCompleted).length}
-      />
-
-      {/* Calendar View Area */}
       <AnimatePresence mode="popLayout">
         {view === "calendar" && (
           <motion.div
@@ -572,25 +569,16 @@ export function TodoList({
       >
         <div className="space-y-3 pb-20">
           {optimisticTodos.length === 0 ? (
-            <EmptyState onAddClick={() => inputRef.current?.focus()} />
+            <EmptyState
+              type="all-clear"
+              onAddClick={() => inputRef.current?.focus()}
+            />
           ) : filteredTodos.length === 0 ? (
-            <div className="text-center py-12 text-zinc-400 bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
-              {view === "calendar" ? (
-                <>
-                  <CalendarIcon className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">
-                    {selectedDate
-                      ? `${format(selectedDate, "M월 d일", { locale: ko })}에 계획된 일이 없네요.`
-                      : "날짜를 선택해주세요."}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <FolderIcon className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">검색 결과가 없습니다.</p>
-                </>
-              )}
-            </div>
+            view === "calendar" ? (
+              <EmptyState type="date-empty" />
+            ) : (
+              <EmptyState type="no-results" />
+            )
           ) : (
             <SortableContext
               items={filteredTodos.map((t) => t.id)}
@@ -616,23 +604,6 @@ export function TodoList({
           )}
         </div>
       </DndContext>
-
-      <AlertDialog open={showUndoAlert} onOpenChange={setShowUndoAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>알림</AlertDialogTitle>
-            <AlertDialogDescription>
-              실행 취소 기능은 준비 중입니다. 삭제된 데이터는 복구되지
-              않았습니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowUndoAlert(false)}>
-              확인
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
