@@ -44,6 +44,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isSameDay } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -115,6 +124,7 @@ export function TodoList({
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [showUndoAlert, setShowUndoAlert] = useState(false);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -267,9 +277,7 @@ export function TodoList({
           // Todo: Undo logic requires restore action or soft delete.
           // For now, inform user.
           toast.dismiss();
-          alert(
-            "실행 취소 기능은 준비 중입니다. 삭제된 데이터는 복구되지 않았습니다.",
-          );
+          setShowUndoAlert(true);
         },
       },
       duration: 3000,
@@ -608,6 +616,23 @@ export function TodoList({
           )}
         </div>
       </DndContext>
+
+      <AlertDialog open={showUndoAlert} onOpenChange={setShowUndoAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>알림</AlertDialogTitle>
+            <AlertDialogDescription>
+              실행 취소 기능은 준비 중입니다. 삭제된 데이터는 복구되지
+              않았습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowUndoAlert(false)}>
+              확인
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

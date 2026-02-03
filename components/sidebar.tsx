@@ -43,6 +43,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SidebarProps {
   initialFolders: Folder[];
@@ -213,10 +223,6 @@ function SidebarContent({ initialFolders, onNavigate }: SidebarContentProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (
-      !confirm("정말 삭제하시겠습니까? 안의 할 일들도 모두 삭제될 수 있습니다.")
-    )
-      return;
     startTransition(async () => {
       addOptimisticFolder({ type: "delete", id });
       await deleteFolder(id);
@@ -338,6 +344,7 @@ function FolderItem({
   const [newName, setNewName] = useState(folder.name);
   const [newColor, setNewColor] = useState(folder.color || "blue-500");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const activeColor =
     FOLDER_COLORS.find((c) => c.value === (folder.color || "blue-500")) ||
@@ -410,7 +417,7 @@ function FolderItem({
               <span>수정</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onDelete(folder.id)}
+              onClick={() => setIsDeleteDialogOpen(true)}
               className="gap-2 text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-950/30"
             >
               <Trash2 className="w-3 h-3" />
@@ -479,6 +486,32 @@ function FolderItem({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>정말 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogDescription>
+              안의 할 일들도 모두 삭제될 수 있습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDelete(folder.id);
+                setIsDeleteDialogOpen(false);
+              }}
+              className="bg-red-600 focus:ring-red-600 hover:bg-red-700"
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
