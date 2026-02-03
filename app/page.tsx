@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { TodoList } from "@/components/todo-list";
 import { getTodos } from "@/app/actions/todo";
 import { LandingPage } from "@/components/landing-page";
+import { UserProfile } from "@/components/user-profile";
 
 import { Sidebar, MobileSidebar } from "@/components/sidebar";
 import { getFolders } from "@/app/actions/folder";
@@ -40,7 +41,7 @@ export default async function Page({
           </div>
           <div className="flex gap-4 items-center">
             <ModeToggle />
-            {/* Optional: Add Sign Out button logic here or in a dropdown */}
+            <UserProfile user={session.user} />
           </div>
         </header>
         <div className="flex max-w-7xl mx-auto">
