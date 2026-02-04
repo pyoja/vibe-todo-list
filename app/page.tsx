@@ -44,9 +44,9 @@ export default async function Page({
             <UserProfile user={session.user} />
           </div>
         </header>
-        <div className="flex max-w-7xl mx-auto">
+        <div className="flex w-full">
           <Sidebar initialFolders={folders} />
-          <main className="flex-1 py-4 sm:py-10 px-4 sm:px-6">
+          <main className="flex-1 py-6 px-4 sm:px-8 w-full max-w-5xl mx-auto">
             <TodoList
               initialTodos={todos}
               folders={folders}

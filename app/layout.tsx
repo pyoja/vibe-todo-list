@@ -16,8 +16,26 @@ const fontInter = Inter({
 });
 
 export const metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000",
+  ),
   title: "하루조각 - 당신의 하루를 정리하세요",
-  description: "당신의 하루를 채우는 작은 조각들",
+  description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
+  openGraph: {
+    images: "/opengraph-image.png",
+  },
+};
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

@@ -103,7 +103,7 @@ export function Sidebar({ initialFolders, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden md:flex w-64 bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl border-r border-white/20 dark:border-zinc-800/50 flex-shrink-0 flex-col h-[calc(100vh-4rem)] sticky top-16 transition-all duration-300 shadow-2xl z-50",
+        "hidden md:flex w-64 bg-slate-50/50 dark:bg-black/20 flex-shrink-0 flex-col h-[calc(100vh-4rem)] sticky top-16 transition-all duration-300 z-40",
         className,
       )}
     >
@@ -118,7 +118,7 @@ export function MobileSidebar({ initialFolders }: SidebarProps) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden -ml-2">
+        <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
