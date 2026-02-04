@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { toast } from "sonner";
 import { IOSInstallGuide } from "./ios-install-guide";
@@ -10,11 +10,6 @@ import { Download, X } from "lucide-react";
 export function PWAInstallManager() {
   const { isInstallable, isIOS, isStandalone, installApp } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const showAndroidToast = useCallback(() => {
     toast.custom(
@@ -59,7 +54,6 @@ export function PWAInstallManager() {
   }, [installApp]);
 
   useEffect(() => {
-    if (!mounted) return;
     if (isStandalone) return; // Already installed
 
     // Trigger Logic:
@@ -99,7 +93,7 @@ export function PWAInstallManager() {
 
       return () => clearTimeout(timer);
     }
-  }, [mounted, isInstallable, isStandalone, isIOS, showAndroidToast]);
+  }, [isInstallable, isStandalone, isIOS, showAndroidToast]);
 
   // For iOS, we can provide a function to open the guide,
   // maybe exposed via context or just a global button if needed later.
@@ -108,7 +102,7 @@ export function PWAInstallManager() {
   // Instead, show a Toast that says "Install App" which OPENS the sheet.
 
   useEffect(() => {
-    if (!mounted || isStandalone || !isIOS) return;
+    if (isStandalone || !isIOS) return;
 
     // Check visit for iOS too
     const visits = Number(localStorage.getItem("visit_count") || "0");
@@ -125,7 +119,7 @@ export function PWAInstallManager() {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [mounted, isIOS, isStandalone]);
+  }, [isIOS, isStandalone]);
 
   return (
     <>
