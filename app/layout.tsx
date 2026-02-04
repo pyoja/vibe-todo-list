@@ -17,11 +17,7 @@ const fontInter = Inter({
 });
 
 export const metadata = {
-  metadataBase: new URL(
-    process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000",
-  ),
+  metadataBase: new URL("https://vibe-todo-list-brown.vercel.app"),
   title: "하루조각 - 당신의 하루를 정리하세요",
   description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
   openGraph: {
@@ -29,14 +25,6 @@ export const metadata = {
     description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
     url: "/",
     siteName: "하루조각",
-    images: [
-      {
-        url: "/opengraph-image.png",
-        width: 1200,
-        height: 630,
-        alt: "하루조각 미리보기",
-      },
-    ],
     locale: "ko_KR",
     type: "website",
   },
@@ -44,7 +32,6 @@ export const metadata = {
     card: "summary_large_image",
     title: "하루조각 - 당신의 하루를 정리하세요",
     description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
-    images: ["/opengraph-image.png"],
   },
 };
 

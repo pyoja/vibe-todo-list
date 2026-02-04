@@ -93,17 +93,17 @@ export function LandingPage() {
             <span className="text-blue-600">조각조각 완성해보세요</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both delay-200">
-            복잡한 기능은 덜어내고, 꼭 필요한 것만 남겼습니다.
+          <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both delay-200 break-keep">
+            복잡한 기능을 덜어내고, 꼭 필요한 것만 남겼습니다.
             <br />
             하루조각과 함께 소중한 일상을 기록하고 관리하세요.
           </p>
 
           <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-10 duration-700 fill-mode-both delay-300">
-            <Link href="/login">
+            <Link href="/login" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="h-12 px-8 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-105"
+                className="w-full sm:w-auto h-12 px-8 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-105"
               >
                 무료로 시작하기
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -114,7 +114,7 @@ export function LandingPage() {
               variant="outline"
               size="lg"
               onClick={() => setIsGuest(true)}
-              className="h-12 px-8 text-lg rounded-full border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900"
+              className="w-full sm:w-auto h-12 px-8 text-lg rounded-full border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900"
             >
               게스트로 체험하기
             </Button>

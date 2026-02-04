@@ -13,21 +13,21 @@ interface Testimonial {
 
 const testimonials: Testimonial[] = [
   {
-    name: "김민지",
+    name: "김**",
     role: "마케터",
     content:
       "평소 쓰던 플래너가 너무 복잡해서 몇 번 쓰다 포기했는데, 하루조각은 정말 필요한 기능만 있어서 꾸준히 쓰게 돼요.",
     avatar: "MJ",
   },
   {
-    name: "이준호",
+    name: "이**",
     role: "프론트엔드 개발자",
     content:
       "일정을 체크박스로 지워나가는 쾌감이 남다릅니다. 퇴근할 때 ‘오늘도 잘 살았다’는 성취감이 들게 해주는 앱이에요.",
     avatar: "JH",
   },
   {
-    name: "박성훈",
+    name: "박**",
     role: "스타트업 CEO",
     content:
       "아침 3분이면 하루 계획이 끝납니다. 복잡한 설정 없이 바로 시작할 수 있다는 점이 가장 큰 장점이네요.",
