@@ -487,7 +487,7 @@ export function TodoList({
                 ? `${format(selectedDate, "M월 d일", { locale: ko })}에 할 일을 추가하세요`
                 : "오늘 어떤 멋진 일을 계획하고 계신가요?"
             }
-            className="border-0 focus-visible:ring-0 bg-transparent text-xl font-medium p-0 h-auto placeholder:text-zinc-400 dark:placeholder:text-zinc-500 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal"
+            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 h-auto placeholder:text-zinc-400 dark:placeholder:text-zinc-500 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal"
             autoComplete="off"
             disabled={isPending}
           />

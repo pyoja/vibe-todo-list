@@ -27,7 +27,7 @@ export default async function Page({
     ]);
 
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-black selection:bg-blue-100 dark:selection:bg-blue-900">
+      <div className="min-h-screen bg-slate-50 dark:bg-black selection:bg-blue-100 dark:selection:bg-blue-900 overflow-x-hidden">
         <header className="px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-xl sticky top-0 z-50">
           <div className="flex items-center gap-3 font-bold text-xl tracking-tight">
             <MobileSidebar initialFolders={folders} />

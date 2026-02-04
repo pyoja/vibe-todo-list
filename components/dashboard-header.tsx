@@ -56,9 +56,9 @@ export function DashboardHeader({
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
             {greeting}, <br className="md:hidden" />
-            <span className="text-blue-200">{userName}</span>님.
+            <span className="text-blue-200 inline-block">{userName}</span>님.
           </h1>
-          <p className="text-blue-100/80 text-lg flex items-center gap-2 mt-1">
+          <p className="text-blue-100/80 text-sm md:text-lg flex items-center gap-2 mt-1 break-keep">
             {icon}
             오늘은 어떤 하루를 그리고 계신가요?
           </p>

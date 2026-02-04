@@ -190,7 +190,7 @@ export function SortableTodoItem({
           {/* Content */}
           <span
             className={cn(
-              "text-base transition-all duration-200 select-none cursor-pointer truncate",
+              "text-base transition-all duration-200 select-none cursor-pointer break-words whitespace-normal leading-relaxed",
               todo.isCompleted
                 ? "text-zinc-400 font-medium"
                 : "text-zinc-800 dark:text-zinc-100 font-bold",
