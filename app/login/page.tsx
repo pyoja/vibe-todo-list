@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { InAppBrowserGuard } from "@/components/auth/in-app-browser-guard";
 
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-black p-4">
+      <InAppBrowserGuard />
       <div className="w-full max-w-sm space-y-8 text-center">
         {/* Logo */}
         <div className="flex flex-col items-center gap-2">
