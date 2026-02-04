@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Sun, Moon, CloudSun, CheckCircle2, ListTodo } from "lucide-react";
+import { WeeklyReportDialog } from "@/components/weekly-report";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -64,29 +65,33 @@ export function DashboardHeader({
         </div>
 
         {/* Right: Summary Card */}
-        <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 min-w-[200px]">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-blue-200 font-medium">
-              오늘의 진행률
-            </span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold">{progress}%</span>
-              <span className="text-sm text-blue-200">완료</span>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <WeeklyReportDialog />
 
-          <div className="h-10 w-px bg-white/20 mx-2"></div>
-
-          <div className="flex flex-col gap-1 items-end flex-1">
-            <div className="flex items-center gap-1.5 text-blue-100">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span className="text-xs">{completedTodos} 완료</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-blue-100">
-              <ListTodo className="w-3.5 h-3.5" />
-              <span className="text-xs">
-                {totalTodos - completedTodos} 남음
+          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 min-w-[200px]">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-blue-200 font-medium">
+                오늘의 진행률
               </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold">{progress}%</span>
+                <span className="text-sm text-blue-200">완료</span>
+              </div>
+            </div>
+
+            <div className="h-10 w-px bg-white/20 mx-2"></div>
+
+            <div className="flex flex-col gap-1 items-end flex-1">
+              <div className="flex items-center gap-1.5 text-blue-100">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span className="text-xs">{completedTodos} 완료</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-blue-100">
+                <ListTodo className="w-3.5 h-3.5" />
+                <span className="text-xs">
+                  {totalTodos - completedTodos} 남음
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import confetti from "canvas-confetti";
 import {
   Check,
   Trash2,
@@ -152,7 +153,24 @@ export function SortableTodoItem({
 
         {/* Checkbox */}
         <button
-          onClick={() => onToggle(todo.id, todo.isCompleted)}
+          onClick={(e) => {
+            if (!todo.isCompleted) {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = (rect.left + rect.width / 2) / window.innerWidth;
+              const y = (rect.top + rect.height / 2) / window.innerHeight;
+              confetti({
+                particleCount: 20,
+                spread: 70,
+                origin: { x, y },
+                colors: ["#60a5fa", "#3b82f6", "#2563eb"],
+                ticks: 50,
+                gravity: 1.2,
+                scalar: 0.8,
+                zIndex: 9999,
+              });
+            }
+            onToggle(todo.id, todo.isCompleted);
+          }}
           className={cn(
             "mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95",
             todo.isCompleted

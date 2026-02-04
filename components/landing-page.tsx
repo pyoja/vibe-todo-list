@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Puzzle } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
 import { TodoList } from "@/components/todo-list";
+import { InteractiveDemo } from "@/components/landing/interactive-demo";
+import { Testimonials } from "@/components/landing/testimonials";
+import { StatsCounter } from "@/components/landing/stats-counter";
 
 export function LandingPage() {
   const [isGuest, setIsGuest] = useState(false);
@@ -116,7 +120,72 @@ export function LandingPage() {
             </Button>
           </div>
         </div>
+
+        {/* Hero Image */}
+        <div className="mt-16 relative w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-12 duration-700 delay-500 px-4 sm:px-0">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900">
+            <Image
+              src="/hero-app.png"
+              alt="Daypiece App Interface"
+              width={1200}
+              height={800}
+              className="w-full h-auto object-cover"
+              priority
+            />
+          </div>
+        </div>
       </main>
+
+      {/* Interactive Demo Section */}
+      <section className="py-20 px-4 w-full bg-slate-50/50 dark:bg-zinc-900/20">
+        <div className="max-w-3xl mx-auto text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+          <div className="space-y-4">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              지금 바로 기록해보세요
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400">
+              회원가입 없이도 체험할 수 있습니다.
+            </p>
+          </div>
+          <InteractiveDemo />
+        </div>
+      </section>
+
+      {/* Comparison Section */}
+      <section className="py-24 px-4 bg-slate-50 dark:bg-zinc-900/30 border-y border-slate-100 dark:border-zinc-900 w-full">
+        <div className="max-w-5xl mx-auto text-center space-y-12">
+          <div className="space-y-4">
+            <div className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-sm font-medium text-blue-700 dark:text-blue-300">
+              Simple is Best
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+              복잡한 기능은 덜어냈습니다
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              수많은 버튼과 설정에 지치셨나요?
+              <br className="hidden sm:block" />
+              Daypiece는 오직 <strong>&apos;당신의 오늘&apos;</strong>에만
+              집중할 수 있도록 설계되었습니다.
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-black group hover:shadow-2xl transition-all duration-500">
+            <Image
+              src="/comparison-ui.png"
+              alt="Comparison: Complex Planner vs Daypiece"
+              width={1200}
+              height={600}
+              className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-700"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <StatsCounter />
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* Footer */}
       <footer className="py-8 text-center text-sm text-slate-500 dark:text-slate-600">

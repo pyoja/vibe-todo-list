@@ -19,8 +19,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { LogOut, User as UserIcon, Settings, Loader2 } from "lucide-react";
+import {
+  LogOut,
+  User as UserIcon,
+  Settings,
+  Loader2,
+  Bell,
+} from "lucide-react";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner"; // Assuming sonner is installed as 'sonner.tsx' implies.
@@ -41,6 +48,12 @@ export function UserProfile({ user }: UserProfileProps) {
   const [name, setName] = useState(user.name);
   // In a real app we'd need an update function, for now we just show the UI for "input"
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Notification Settings State (Mock initial values)
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [morningTime, setMorningTime] = useState("08:00");
+  const [eveningTime, setEveningTime] = useState("22:00");
+  const [weekendDnd, setWeekendDnd] = useState(true);
 
   const handleSignOut = async () => {
     setIsSignOutLoading(true);
@@ -151,6 +164,80 @@ export function UserProfile({ user }: UserProfileProps) {
                 disabled
                 className="col-span-3 opacity-70 bg-slate-100 dark:bg-zinc-800"
               />
+            </div>
+
+            {/* Notification Settings Section */}
+            <div className="border-t pt-4 mt-2">
+              <h4 className="mb-4 text-sm font-medium flex items-center gap-2">
+                <Bell className="w-4 h-4" /> 알림 설정
+              </h4>
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="pushEnabled"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    푸시 알림 받기
+                  </label>
+                  <Checkbox
+                    id="pushEnabled"
+                    checked={pushEnabled}
+                    onCheckedChange={(checked) =>
+                      setPushEnabled(checked as boolean)
+                    }
+                  />
+                </div>
+
+                {pushEnabled && (
+                  <>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <label
+                        htmlFor="morningTime"
+                        className="text-right text-sm text-muted-foreground"
+                      >
+                        모닝 브리핑
+                      </label>
+                      <Input
+                        id="morningTime"
+                        type="time"
+                        value={morningTime}
+                        onChange={(e) => setMorningTime(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <label
+                        htmlFor="eveningTime"
+                        className="text-right text-sm text-muted-foreground"
+                      >
+                        저녁 회고
+                      </label>
+                      <Input
+                        id="eveningTime"
+                        type="time"
+                        value={eveningTime}
+                        onChange={(e) => setEveningTime(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label
+                        htmlFor="weekendDnd"
+                        className="text-sm text-muted-foreground cursor-pointer"
+                      >
+                        주말에는 알림 끄기
+                      </label>
+                      <Checkbox
+                        id="weekendDnd"
+                        checked={weekendDnd}
+                        onCheckedChange={(checked) =>
+                          setWeekendDnd(checked as boolean)
+                        }
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PWAInstallManager } from "@/components/pwa/pwa-manager";
 
 import { cn } from "@/lib/utils";
 import { Noto_Sans_KR, Inter } from "next/font/google"; // 1. Import Inter
@@ -25,11 +26,6 @@ export const metadata = {
   description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
   openGraph: {
     images: "/opengraph-image.png",
-  },
-  verification: {
-    other: {
-      "naver-site-verification": "7591da42c77ce7589e5741d7c3591c8344a3fc57",
-    },
   },
 };
 
@@ -65,6 +61,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <PWAInstallManager />
           <Toaster />
         </ThemeProvider>
       </body>

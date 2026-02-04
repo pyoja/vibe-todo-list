@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
-import confetti from "canvas-confetti";
 import useSound from "use-sound";
 import {
   Select,
@@ -62,6 +61,7 @@ import {
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableTodoItem } from "@/components/sortable-todo-item";
 import { CalendarView } from "@/components/calendar-view";
+import { DayCompletionCard } from "@/components/day-completion-card";
 
 // Animation & Interaction
 import { toast } from "sonner";
@@ -110,6 +110,7 @@ export function TodoList({
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [showCompletionCard, setShowCompletionCard] = useState(false);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -245,33 +246,6 @@ export function TodoList({
     { volume: 0.5 },
   );
 
-  // Confetti Logic
-  const triggerConfetti = () => {
-    const end = Date.now() + 1000;
-    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
-
-    (function frame() {
-      confetti({
-        particleCount: 3,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: colors,
-      });
-      confetti({
-        particleCount: 3,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: colors,
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    })();
-  };
-
   async function handleToggle(id: string, isCompleted: boolean) {
     const todo = optimisticTodos.find((t) => t.id === id);
     if (!todo) return;
@@ -295,7 +269,8 @@ export function TodoList({
         (t) => !t.isCompleted && t.id !== id,
       ).length;
       if (remaining === 0 && optimisticTodos.length > 0) {
-        triggerConfetti();
+        // Delay slightly for visual check effect
+        setTimeout(() => setShowCompletionCard(true), 500);
       }
     }
   }
@@ -641,6 +616,12 @@ export function TodoList({
           )}
         </div>
       </DndContext>
+
+      <DayCompletionCard
+        isOpen={showCompletionCard}
+        onClose={() => setShowCompletionCard(false)}
+        completedCount={optimisticTodos.filter((t) => t.isCompleted).length}
+      />
     </div>
   );
 }

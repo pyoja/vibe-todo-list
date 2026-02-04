@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "oh-my-ag": {
+      "command": "C:\\Windows\\System32\\wsl.exe",
+      "args": [
+        "-d",
+        "Ubuntu",
+        "-e",
+        "/home/icomer/.bun/bin/bun",
+        "x",
+        "oh-my-ag",
+        "bridge"
+      ]
+    }
+  }
+}

@@ -1,21 +1,17 @@
 {
   "mcpServers": {
-    "serena": {
-      "command": "uvx",
+    "oh-my-ag": {
+      "command": "C:\\Windows\\System32\\wsl.exe",
       "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena",
-        "start-mcp-server",
-        "--context",
-        "antigravity",
-        "--project",
-        "."
+        "-d",
+        "Ubuntu",
+        "-e",
+        "/home/icomer/.bun/bin/bun",
+        "x",
+        "oh-my-ag",
+        "bridge"
       ],
-      "env": {
-        "SERENA_LOG_LEVEL": "info"
-      },
-      "available_tools": null
+      "disabled": false
     }
   },
   "memoryConfig": {
