@@ -30,7 +30,7 @@ export default function LoginPage() {
             onClick={async () => {
               await authClient.signIn.social({
                 provider: "google",
-                callbackURL: "/todo",
+                callbackURL: "/",
               });
             }}
           >

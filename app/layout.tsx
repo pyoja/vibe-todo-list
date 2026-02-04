@@ -25,7 +25,26 @@ export const metadata = {
   title: "하루조각 - 당신의 하루를 정리하세요",
   description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
   openGraph: {
-    images: "/opengraph-image.png",
+    title: "하루조각 - 당신의 하루를 정리하세요",
+    description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
+    url: "/",
+    siteName: "하루조각",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        width: 1200,
+        height: 630,
+        alt: "하루조각 미리보기",
+      },
+    ],
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "하루조각 - 당신의 하루를 정리하세요",
+    description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
+    images: ["/opengraph-image.png"],
   },
 };
 
