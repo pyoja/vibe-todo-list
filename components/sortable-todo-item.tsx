@@ -134,19 +134,19 @@ export function SortableTodoItem({
       // Disable layout animation during drag to prevent flickering
       layout={isDragging ? false : true}
       className={cn(
-        "group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-zinc-300/50 dark:hover:border-zinc-700 hover:-translate-y-0.5",
+        "group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-zinc-300/50 dark:hover:border-zinc-700 hover:-translate-y-0.5 w-full max-w-full",
         todo.isCompleted &&
           "bg-zinc-50/50 dark:bg-zinc-900/30 opacity-60 grayscale-[0.5] shadow-none hover:shadow-none hover:translate-y-0 hover:border-zinc-200/50",
         isDragging &&
           "shadow-2xl scale-[1.02] border-blue-500/50 dark:border-blue-500/50 z-50 ring-1 ring-blue-500/20 opacity-90 rotate-1",
       )}
     >
-      <div className="flex items-start gap-3 flex-1 min-w-0 pr-4">
+      <div className="flex items-start gap-3 flex-1 min-w-0 pr-0 sm:pr-4 w-full">
         {/* Drag Handle */}
         <div
           {...attributes}
           {...listeners}
-          className="flex-shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-blue-500 transition-colors touch-none p-3 -ml-3 -mr-1 outline-none rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-blue-500 transition-colors touch-none p-2 mt-0.5 -ml-2 sm:-ml-3 outline-none rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
         >
           <GripVertical className="w-5 h-5" />
         </div>
@@ -172,7 +172,7 @@ export function SortableTodoItem({
             onToggle(todo.id, todo.isCompleted);
           }}
           className={cn(
-            "mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95",
+            "mt-1 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95",
             todo.isCompleted
               ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20"
               : "border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400 bg-zinc-50 dark:bg-zinc-800",
@@ -186,28 +186,18 @@ export function SortableTodoItem({
           />
         </button>
 
-        <div className="flex flex-col gap-1.5 min-w-0 w-full">
+        <div className="flex flex-col gap-1.5 min-w-0 flex-1">
           {/* Content */}
           <span
             className={cn(
-              "text-base transition-all duration-200 select-none cursor-pointer break-words whitespace-normal leading-relaxed",
+              "text-base transition-all duration-200 select-none cursor-pointer break-all whitespace-normal leading-relaxed",
               todo.isCompleted
-                ? "text-zinc-400 font-medium"
+                ? "text-zinc-400 font-medium line-through decoration-zinc-400 decoration-2"
                 : "text-zinc-800 dark:text-zinc-100 font-bold",
             )}
             onClick={() => onToggle(todo.id, todo.isCompleted)}
           >
-            <span className="relative">
-              {todo.content}
-              <span
-                className={cn(
-                  "absolute left-0 top-1/2 w-full h-0.5 bg-zinc-400 block transition-all duration-300 origin-left",
-                  todo.isCompleted
-                    ? "scale-x-100 opacity-100"
-                    : "scale-x-0 opacity-0",
-                )}
-              />
-            </span>
+            {todo.content}
           </span>
 
           {/* Meta Tags */}
@@ -276,7 +266,7 @@ export function SortableTodoItem({
       </div>
 
       {/* Actions */}
-      <div className="mt-4 sm:mt-0 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+      <div className="mt-4 sm:mt-0 flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity focus-within:opacity-100">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
