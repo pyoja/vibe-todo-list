@@ -26,6 +26,11 @@ export const metadata = {
   openGraph: {
     images: "/opengraph-image.png",
   },
+  verification: {
+    other: {
+      "naver-site-verification": "7591da42c77ce7589e5741d7c3591c8344a3fc57",
+    },
+  },
 };
 
 export const viewport = {
