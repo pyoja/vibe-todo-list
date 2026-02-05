@@ -493,9 +493,9 @@ export function TodoList({
             placeholder={
               view === "calendar" && selectedDate
                 ? `${format(selectedDate, "M월 d일", { locale: ko })} 어떤 하루를 만들까요? ✨`
-                : "오늘 어떤 순간을 남기고 싶으신가요? ✨"
+                : "오늘은 어떤 하루를 그리고 계신가요?"
             }
-            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 min-h-[60px] placeholder:text-zinc-400 dark:placeholder:text-zinc-300 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
+            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium pl-3 min-h-[60px] placeholder:text-zinc-400 dark:placeholder:text-zinc-300 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
             autoComplete="off"
             disabled={isPending}
           />
