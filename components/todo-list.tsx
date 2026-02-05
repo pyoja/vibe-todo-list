@@ -203,14 +203,15 @@ export function TodoList({
     if (!content.trim()) return;
 
     setIsPending(true);
-    formRef.current?.reset();
 
+    // by jh 20260205: 상태 값을 먼저 저장한 후 form reset (사용자가 추가 입력 중인 내용 보호)
     const currentPriority = priority;
     // If in calendar view, use selectedDate as default dueDate
     const currentDueDate = view === "calendar" ? selectedDate : dueDate;
 
     setPriority("medium");
     setDueDate(undefined);
+    formRef.current?.reset();
 
     const tempId = crypto.randomUUID();
     const newTodo: Todo = {
@@ -225,13 +226,14 @@ export function TodoList({
       order: Date.now(), // Newest on top or adjust as needed
     };
 
+    // by jh 20260205: Optimistic update와 Toast를 즉시 실행하여 즉각적인 피드백 제공
     startTransition(() => {
       addOptimisticTodo(newTodo);
     });
+    toast.success("할 일이 추가되었습니다.");
 
     try {
       await addTodo(content, currentPriority, currentDueDate);
-      toast.success("할 일이 추가되었습니다.");
     } catch (e) {
       console.error(e);
       toast.error("할 일 추가에 실패했습니다.");
@@ -473,21 +475,21 @@ export function TodoList({
 
       {/* Smart Input Section */}
       <div className="relative group z-10">
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-2xl blur-md opacity-20 group-hover:opacity-40 transition duration-500"></div>
         <form
           ref={formRef}
           action={handleAdd}
-          className="relative flex flex-col gap-4 bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-inner group-hover:border-blue-500/30 transition-all"
+          className="relative flex flex-col gap-4 bg-gradient-to-br from-white to-blue-50/30 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800/80 p-6 rounded-2xl border border-zinc-200/80 dark:border-zinc-700/70 shadow-lg dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.3),0_8px_30px_rgba(0,0,0,0.4)] group-hover:border-blue-400/40 dark:group-hover:border-blue-500/50 transition-all duration-300"
         >
           <Input
             ref={inputRef}
             name="content"
             placeholder={
               view === "calendar" && selectedDate
-                ? `${format(selectedDate, "M월 d일", { locale: ko })} 할 일...`
-                : "할 일을 입력하세요..."
+                ? `${format(selectedDate, "M월 d일", { locale: ko })} 어떤 하루를 만들까요? ✨`
+                : "오늘 어떤 순간을 남기고 싶으신가요? ✨"
             }
-            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 h-auto placeholder:text-zinc-500 dark:placeholder:text-zinc-400 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
+            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 h-auto placeholder:text-zinc-400 dark:placeholder:text-zinc-400/90 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
             autoComplete="off"
             disabled={isPending}
           />
