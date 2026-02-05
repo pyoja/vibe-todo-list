@@ -3,8 +3,9 @@
 import {
   useState,
   useRef,
-  useMemo,
   useOptimistic,
+  useMemo,
+  useEffect,
   startTransition,
 } from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
@@ -105,6 +106,7 @@ export function TodoList({
   const [isPending, setIsPending] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // New Todo State
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
@@ -119,6 +121,17 @@ export function TodoList({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
   );
+
+  // by jh 20260205: Enhanced filter state for UX optimization
+  const [priorityFilter, setPriorityFilter] = useState<
+    "all" | "low" | "medium" | "high"
+  >("all");
+  const [dueDateFilter, setDueDateFilter] = useState<
+    "all" | "overdue" | "today" | "week"
+  >("all");
+  const [sortBy, setSortBy] = useState<
+    "created" | "dueDate" | "priority" | "name"
+  >("created");
 
   const {
     todos: sourceTodos,
@@ -167,8 +180,22 @@ export function TodoList({
     },
   );
 
+  // by jh 20260205: Keyboard shortcuts listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K: Search focus
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const filteredTodos = useMemo(() => {
-    return optimisticTodos.filter((todo) => {
+    const result = optimisticTodos.filter((todo) => {
       // 1. Search filter
       if (
         searchTerm &&
@@ -177,18 +204,78 @@ export function TodoList({
         return false;
       }
 
-      // 2. Calendar View Date Filter
+      // 2. Priority filter
+      if (priorityFilter !== "all" && todo.priority !== priorityFilter) {
+        return false;
+      }
+
+      // 3. Due date filter
+      if (dueDateFilter !== "all") {
+        if (!todo.dueDate) return false;
+        const dueDate = new Date(todo.dueDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (dueDateFilter === "overdue") {
+          if (dueDate >= today) return false;
+        } else if (dueDateFilter === "today") {
+          if (!isSameDay(dueDate, today)) return false;
+        } else if (dueDateFilter === "week") {
+          const weekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+          if (dueDate < today || dueDate > weekLater) return false;
+        }
+      }
+
+      // 4. Calendar View Date Filter
       if (view === "calendar" && selectedDate) {
         if (!todo.dueDate) return false;
         if (!isSameDay(new Date(todo.dueDate), selectedDate)) return false;
       }
 
-      // 3. Status filter
+      // 5. Status filter
       if (filter === "active" && todo.isCompleted) return false;
       if (filter === "completed" && !todo.isCompleted) return false;
       return true;
     });
-  }, [optimisticTodos, searchTerm, filter, view, selectedDate]);
+
+    // Sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "dueDate":
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        case "priority": {
+          const priorityOrder: Record<string, number> = {
+            high: 3,
+            medium: 2,
+            low: 1,
+          };
+          const pA = a.priority ? priorityOrder[a.priority] || 2 : 2;
+          const pB = b.priority ? priorityOrder[b.priority] || 2 : 2;
+          return pB - pA;
+        }
+        case "name":
+          return a.content.localeCompare(b.content, "ko");
+        case "created":
+        default:
+          return b.createdAt.getTime() - a.createdAt.getTime();
+      }
+    });
+
+    return result;
+
+    return result;
+  }, [
+    optimisticTodos,
+    searchTerm,
+    priorityFilter,
+    dueDateFilter,
+    sortBy,
+    filter,
+    view,
+    selectedDate,
+  ]);
 
   // DnD Sensors
   const sensors = useSensors(
@@ -387,7 +474,8 @@ export function TodoList({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
           <Input
-            placeholder="무엇을 찾고 계신가요?"
+            ref={searchInputRef}
+            placeholder="무엇을 찾고 계신가요? (Cmd+K)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 h-9 bg-zinc-50 dark:bg-zinc-800 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400"
@@ -402,7 +490,58 @@ export function TodoList({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={priorityFilter}
+            onValueChange={(value) =>
+              setPriorityFilter(value as "all" | "low" | "medium" | "high")
+            }
+          >
+            <SelectTrigger className="h-9 w-28 text-xs">
+              <SelectValue placeholder="우선순위" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체</SelectItem>
+              <SelectItem value="high">높음</SelectItem>
+              <SelectItem value="medium">보통</SelectItem>
+              <SelectItem value="low">낮음</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={dueDateFilter}
+            onValueChange={(value) =>
+              setDueDateFilter(value as "all" | "overdue" | "today" | "week")
+            }
+          >
+            <SelectTrigger className="h-9 w-28 text-xs">
+              <SelectValue placeholder="마감일" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체</SelectItem>
+              <SelectItem value="overdue">지난 일</SelectItem>
+              <SelectItem value="today">오늘</SelectItem>
+              <SelectItem value="week">이번 주</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={sortBy}
+            onValueChange={(value) =>
+              setSortBy(value as "created" | "dueDate" | "priority" | "name")
+            }
+          >
+            <SelectTrigger className="h-9 w-28 text-xs">
+              <SelectValue placeholder="정렬" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created">생성일</SelectItem>
+              <SelectItem value="dueDate">마감일</SelectItem>
+              <SelectItem value="priority">우선순위</SelectItem>
+              <SelectItem value="name">이름</SelectItem>
+            </SelectContent>
+          </Select>
+
           {/* View Toggle */}
           <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 flex items-center shrink-0 h-9">
             <button

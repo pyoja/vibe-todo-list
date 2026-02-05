@@ -16,6 +16,10 @@ export type Todo = {
   folderName?: string;
   folderColor?: string;
   order: number;
+  // by jh 20260205: 반복 일정 필드 추가
+  isRecurring?: boolean;
+  recurrencePattern?: "daily" | "weekly" | "monthly" | null;
+  recurrenceInterval?: number | null;
 };
 
 async function getSession() {
