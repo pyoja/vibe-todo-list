@@ -244,7 +244,7 @@ export function SortableTodoItem({
                 <input
                   ref={editInputRef}
                   defaultValue={todo.content}
-                  className="flex-1 bg-transparent border-b border-blue-500 focus:outline-none text-base sm:text-lg font-medium py-0"
+                  className="flex-1 bg-transparent border-b border-blue-500 focus:outline-none text-base sm:text-lg font-medium py-0 h-auto"
                   onBlur={handleUpdateContent}
                   onKeyDown={handleKeyDown}
                   onClick={(e) => e.stopPropagation()} // Prevent drag/toggle
@@ -258,6 +258,11 @@ export function SortableTodoItem({
                       : "text-zinc-800 dark:text-zinc-100 font-bold",
                   )}
                   onClick={() => onToggle(todo.id, todo.isCompleted)}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                  title="더블 클릭하여 수정"
                 >
                   {todo.content}
                 </span>
