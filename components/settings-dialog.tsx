@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { type Todo } from "@/app/actions/todo";
+import { TrashDialog } from "@/components/trash-dialog"; // by jh 20260205
 
 export function SettingsDialog({ initialTodos }: { initialTodos: Todo[] }) {
   const { todos } = useTodoManager({ initialTodos });
@@ -75,6 +76,18 @@ export function SettingsDialog({ initialTodos }: { initialTodos: Todo[] }) {
               <Download className="w-4 h-4 mr-2" />
               내보내기
             </Button>
+          </div>
+
+          <div className="flex items-center justify-between space-x-2">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="trash-mode" className="text-base">
+                휴지통
+              </Label>
+              <span className="text-xs text-zinc-500">
+                삭제된 할 일을 복구하거나 영구 삭제합니다.
+              </span>
+            </div>
+            <TrashDialog />
           </div>
 
           {/* Sound Settings Placeholder (Will be connected later) */}

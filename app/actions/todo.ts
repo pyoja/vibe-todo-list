@@ -48,7 +48,9 @@ export async function getTodos(folderId?: string): Promise<Todo[]> {
       ) as "subTodos"
       FROM todo t
       LEFT JOIN folder f ON t."folderId" = f.id
-      WHERE t."userId" = $1
+      FROM todo t
+      LEFT JOIN folder f ON t."folderId" = f.id
+      WHERE t."userId" = $1 AND t."deleted_at" IS NULL
     `;
     // by jh 20260202: 폴더 정보 Join 및 타입 안정성 확보
     const params: (string | null)[] = [session.user.id];
@@ -195,7 +197,7 @@ export async function deleteTodo(id: string) {
 
   try {
     const res = await pool.query(
-      'DELETE FROM todo WHERE id = $1 AND "userId" = $2 RETURNING *',
+      'UPDATE todo SET "deleted_at" = NOW() WHERE id = $1 AND "userId" = $2 RETURNING *',
       [id, session.user.id],
     );
     revalidatePath("/");
@@ -213,33 +215,53 @@ export async function restoreTodo(todo: Todo) {
   try {
     // Restore with original ID and CreatedAt if possible, or new ones if conflict.
     // Here we force insert including ID.
-    const query = `
-      INSERT INTO todo (id, content, "isCompleted", "createdAt", "userId", "folderId", priority, "dueDate", "order", "isRecurring", "recurrencePattern", "recurrenceInterval", tags)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING *
-    `;
-    const params = [
-      todo.id,
-      todo.content,
-      todo.isCompleted,
-      todo.createdAt,
-      session.user.id,
-      todo.folderId || null,
-      todo.priority || "medium",
-      todo.dueDate || null,
-      todo.order || 0,
-      todo.isRecurring || false,
-      todo.recurrencePattern || null,
-      todo.recurrenceInterval || 1,
-      todo.tags || [],
-    ];
-
-    const res = await pool.query(query, params);
+    const res = await pool.query(
+      'UPDATE todo SET "deleted_at" = NULL WHERE id = $1 AND "userId" = $2 RETURNING *',
+      [todo.id, session.user.id],
+    );
     revalidatePath("/");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to restore todo:", error);
     throw new Error("Failed to restore todo");
+  }
+}
+
+export async function getDeletedTodos(): Promise<Todo[]> {
+  const session = await getSession();
+  if (!session) return [];
+
+  try {
+    const query = `
+      SELECT t.*, f.name as "folderName", f.color as "folderColor"
+      FROM todo t
+      LEFT JOIN folder f ON t."folderId" = f.id
+      WHERE t."userId" = $1 AND t."deleted_at" IS NOT NULL
+      ORDER BY t."deleted_at" DESC
+    `;
+    const res = await pool.query(query, [session.user.id]);
+    return res.rows;
+  } catch (error) {
+    console.error("Failed to fetch deleted todos:", error);
+    return [];
+  }
+}
+
+export async function permanentDeleteTodo(id: string) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  try {
+    // Delete sub-todos first? Cascade usually handles it but explicit is safer
+    await pool.query('DELETE FROM sub_todo WHERE "todoId" = $1', [id]);
+    await pool.query('DELETE FROM todo WHERE id = $1 AND "userId" = $2', [
+      id,
+      session.user.id,
+    ]);
+    revalidatePath("/");
+  } catch (error) {
+    console.error("Failed to permanently delete todo:", error);
+    throw new Error("Failed to permanently delete todo");
   }
 }
 
