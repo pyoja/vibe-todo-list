@@ -120,6 +120,29 @@ export function WeeklyReportDialog() {
                   ))}
                 </div>
               </div>
+
+              {/* Tag Analysis - Focus Area */}
+              {stats.tagStats && stats.tagStats.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-end px-1">
+                    <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                      주요 키워드
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {stats.tagStats.map((tag, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800/50 px-3 py-1.5 rounded-full text-xs font-medium text-zinc-700 dark:text-zinc-300"
+                      >
+                        <span className="text-blue-500">#{tag.tag}</span>
+                        <span className="opacity-40">|</span>
+                        <span>{tag.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : null}
         </div>

@@ -21,6 +21,7 @@ export type WeeklyStats = {
   dailyStats: DailyStat[];
   trendMessage: string;
   trendPercentage: number;
+  tagStats: { tag: string; count: number }[];
 };
 
 export async function getWeeklyStats(): Promise<WeeklyStats> {
@@ -31,6 +32,7 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
       dailyStats: [],
       trendMessage: "로그인이 필요합니다.",
       trendPercentage: 0,
+      tagStats: [],
     };
   }
 
@@ -87,19 +89,69 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
       0,
     );
 
-    // Calculate Trend (Compare with previous 7 days roughly)
-    // For "vibe" coding, we can fake a bit or do a quick check.
-    // Let's just return a positive message if count > 0 for now to be fast.
-    // Or do a quick random stat if real comparison is too expensive?
-    // Let's do a simple heuristic:
-    let trendMessage = "지난주보다 더 활기찬 한 주네요!";
-    let trendPercentage = 15; // Placeholder
+    // 4. Tag Analysis
+    const tagQuery = `
+      SELECT tag, COUNT(*) as count
+      FROM (
+        SELECT UNNEST(tags) as tag
+        FROM todo
+        WHERE "userId" = $1
+        AND "isCompleted" = true
+        AND "createdAt" >= $2
+        AND "createdAt" <= $3
+      ) t
+      GROUP BY tag
+      ORDER BY count DESC
+      LIMIT 5
+    `;
+    const tagRes = await pool.query(tagQuery, [
+      session.user.id,
+      startDate,
+      endDate,
+    ]);
+    const tagStats = tagRes.rows.map((row) => ({
+      tag: row.tag as string,
+      count: Number(row.count),
+    }));
 
-    if (totalCompleted === 0) {
-      trendMessage = "아직 기록된 조각이 없어요. 시작해보세요!";
-      trendPercentage = 0;
-    } else if (totalCompleted < 5) {
-      trendMessage = "조금씩 꾸준히, 좋은 시작이에요!";
+    // 5. Weekly Trend (Compare with previous period)
+    const prevStartDate = subDays(new Date(startDate), 7).toISOString();
+    const prevEndDate = subDays(new Date(endDate), 7).toISOString();
+
+    const prevQuery = `
+      SELECT COUNT(*) as count
+      FROM todo
+      WHERE "userId" = $1
+      AND "isCompleted" = true
+      AND "createdAt" >= $2
+      AND "createdAt" <= $3
+    `;
+    const prevRes = await pool.query(prevQuery, [
+      session.user.id,
+      prevStartDate,
+      prevEndDate,
+    ]);
+    const prevTotal = Number(prevRes.rows[0].count);
+
+    let trendPercentage = 0;
+    let trendMessage = "지난주와 비슷해요.";
+
+    if (prevTotal === 0) {
+      if (totalCompleted > 0) {
+        trendPercentage = 100;
+        trendMessage = "지난주보다 훨씬 활기차네요! 🚀";
+      } else {
+        trendMessage = "아직 기록이 부족해요. 시작해보세요!";
+      }
+    } else {
+      trendPercentage = Math.round(
+        ((totalCompleted - prevTotal) / prevTotal) * 100,
+      );
+      if (trendPercentage > 0) {
+        trendMessage = `지난주보다 ${trendPercentage}% 더 성장했어요! 🔥`;
+      } else if (trendPercentage < 0) {
+        trendMessage = "조금만 더 힘내볼까요? 💪";
+      }
     }
 
     return {
@@ -107,6 +159,7 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
       dailyStats,
       trendMessage,
       trendPercentage,
+      tagStats,
     };
   } catch (error) {
     console.error("Failed to fetch statistics:", error);
@@ -115,6 +168,7 @@ export async function getWeeklyStats(): Promise<WeeklyStats> {
       dailyStats: [],
       trendMessage: "데이터를 불러올 수 없습니다.",
       trendPercentage: 0,
+      tagStats: [],
     };
   }
 }
