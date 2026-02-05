@@ -3,6 +3,7 @@ import { type Todo } from "@/app/actions/todo";
 import * as serverActions from "@/app/actions/todo";
 import { type SubTodo } from "@/app/actions/subtodo";
 import * as subTodoActions from "@/app/actions/subtodo";
+import { addDays, addWeeks, addMonths } from "date-fns";
 
 type TodoManagerProps = {
   initialTodos: Todo[];
@@ -118,11 +119,57 @@ export function useTodoManager({
     }
   };
 
+  // ...
+
   const toggleTodo = async (id: string, isCompleted: boolean) => {
     if (isGuest) {
-      const updated = todos.map((t) =>
+      let updated = todos.map((t) =>
         t.id === id ? { ...t, isCompleted: isCompleted } : t,
       );
+
+      // by jh 20260205: Guest Recurring Logic
+      if (isCompleted) {
+        const todo = todos.find((t) => t.id === id);
+        if (todo && todo.isRecurring) {
+          let nextDueDate: Date | null = null;
+          if (todo.dueDate) {
+            const currentDueDate = new Date(todo.dueDate);
+            const interval = todo.recurrenceInterval || 1;
+
+            switch (todo.recurrencePattern) {
+              case "daily":
+                nextDueDate = addDays(currentDueDate, interval);
+                break;
+              case "weekly":
+                nextDueDate = addWeeks(currentDueDate, interval);
+                break;
+              case "monthly":
+                nextDueDate = addMonths(currentDueDate, interval);
+                break;
+            }
+          }
+
+          if (nextDueDate) {
+            const newTodo: Todo = {
+              id: crypto.randomUUID(),
+              content: todo.content,
+              isCompleted: false, // New instance is active
+              createdAt: new Date(),
+              userId: "guest",
+              folderId: todo.folderId,
+              priority: todo.priority,
+              dueDate: nextDueDate,
+              order: Date.now(),
+              isRecurring: true,
+              recurrencePattern: todo.recurrencePattern,
+              recurrenceInterval: todo.recurrenceInterval,
+              tags: todo.tags || [],
+            };
+            updated = [newTodo, ...updated];
+          }
+        }
+      }
+
       saveToLocal(updated);
     } else {
       await serverActions.toggleTodo(id, isCompleted);

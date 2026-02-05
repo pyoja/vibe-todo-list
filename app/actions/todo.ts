@@ -140,8 +140,52 @@ export async function updateTodo(
   }
 }
 
+import { addDays, addWeeks, addMonths } from "date-fns";
+
 export async function toggleTodo(id: string, isCompleted: boolean) {
-  return updateTodo(id, { isCompleted });
+  const updatedTodo = await updateTodo(id, { isCompleted });
+
+  // by jh 20260205: 반복 일정 자동 생성 로직
+  if (updatedTodo && isCompleted && updatedTodo.isRecurring) {
+    try {
+      let nextDueDate: Date | null = null;
+      if (updatedTodo.dueDate) {
+        const currentDueDate = new Date(updatedTodo.dueDate);
+        const interval = updatedTodo.recurrenceInterval || 1;
+
+        switch (updatedTodo.recurrencePattern) {
+          case "daily":
+            nextDueDate = addDays(currentDueDate, interval);
+            break;
+          case "weekly":
+            nextDueDate = addWeeks(currentDueDate, interval);
+            break;
+          case "monthly":
+            nextDueDate = addMonths(currentDueDate, interval);
+            break;
+        }
+      }
+
+      // 다음 일정 생성 (완료되지 않은 상태로)
+      if (nextDueDate) {
+        await createTodo(
+          updatedTodo.content,
+          updatedTodo.folderId || undefined,
+          updatedTodo.priority || "medium",
+          nextDueDate,
+          true, // isRecurring
+          updatedTodo.recurrencePattern,
+          updatedTodo.recurrenceInterval || 1,
+          updatedTodo.tags || [],
+        );
+      }
+    } catch (e) {
+      console.error("Failed to create next recurring todo:", e);
+      // 실패하더라도 원래 투두의 완료 상태 처리는 성공한 것이므로 에러를 throw하지 않음 (선택사항)
+    }
+  }
+
+  return updatedTodo;
 }
 
 // ... (deleteTodo function)
