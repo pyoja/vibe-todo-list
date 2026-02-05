@@ -15,8 +15,9 @@ import { useTodoManager } from "@/hooks/use-todo-manager";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { type Todo } from "@/app/actions/todo";
 
-export function SettingsDialog({ initialTodos }: { initialTodos: any[] }) {
+export function SettingsDialog({ initialTodos }: { initialTodos: Todo[] }) {
   const { todos } = useTodoManager({ initialTodos });
   const [isOpen, setIsOpen] = useState(false);
 

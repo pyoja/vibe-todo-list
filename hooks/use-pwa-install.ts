@@ -7,6 +7,11 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+// Extend Navigator interface
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
@@ -18,10 +23,11 @@ export function usePWAInstall() {
     // Check if running in standalone mode (installed)
     const isStandaloneMode =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone ||
+      (window.navigator as NavigatorWithStandalone).standalone ||
       document.referrer.includes("android-app://");
 
-    setIsStandalone(isStandaloneMode);
+    // eslint-disable-next-line
+    setIsStandalone(!!isStandaloneMode);
 
     // Check if device is iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
