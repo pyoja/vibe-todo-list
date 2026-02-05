@@ -11,6 +11,7 @@ import {
 import { DashboardHeader } from "@/components/dashboard-header";
 import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
+import { type SubTodo } from "@/app/actions/subtodo";
 import { useTodoManager } from "@/hooks/use-todo-manager"; // Import Hook
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -147,6 +148,9 @@ export function TodoList({
     deleteTodo,
     restoreTodo,
     reorderTodos,
+    addSubTodo,
+    toggleSubTodo,
+    deleteSubTodo,
   } = useTodoManager({ initialTodos, userId: user?.id, folderId }); // Initialize Hook
 
   const [optimisticTodos, addOptimisticTodo] = useOptimistic(
@@ -158,7 +162,15 @@ export function TodoList({
         | { type: "delete"; id: string }
         | { type: "toggle"; id: string; isCompleted: boolean }
         | { type: "update"; id: string; updates: Partial<Todo> }
-        | { type: "reorder"; newTodos: Todo[] },
+        | { type: "reorder"; newTodos: Todo[] }
+        | { type: "addSubTodo"; todoId: string; subTodo: SubTodo }
+        | {
+            type: "toggleSubTodo";
+            todoId: string;
+            subTodoId: string;
+            isCompleted: boolean;
+          }
+        | { type: "deleteSubTodo"; todoId: string; subTodoId: string },
     ) => {
       // Handle actions
       if ("type" in newTodo) {
@@ -179,6 +191,40 @@ export function TodoList({
         }
         if (newTodo.type === "reorder") {
           return newTodo.newTodos;
+        }
+        // SubTodo Actions
+        if (newTodo.type === "addSubTodo") {
+          return state.map((t) =>
+            t.id === newTodo.todoId
+              ? { ...t, subTodos: [...(t.subTodos || []), newTodo.subTodo] }
+              : t,
+          );
+        }
+        if (newTodo.type === "toggleSubTodo") {
+          return state.map((t) =>
+            t.id === newTodo.todoId
+              ? {
+                  ...t,
+                  subTodos: (t.subTodos || []).map((st) =>
+                    st.id === newTodo.subTodoId
+                      ? { ...st, isCompleted: newTodo.isCompleted }
+                      : st,
+                  ),
+                }
+              : t,
+          );
+        }
+        if (newTodo.type === "deleteSubTodo") {
+          return state.map((t) =>
+            t.id === newTodo.todoId
+              ? {
+                  ...t,
+                  subTodos: (t.subTodos || []).filter(
+                    (st) => st.id !== newTodo.subTodoId,
+                  ),
+                }
+              : t,
+          );
         }
         return state;
       }
@@ -292,8 +338,22 @@ export function TodoList({
   );
 
   async function handleAdd(formData: FormData) {
-    const content = formData.get("content") as string;
-    if (!content.trim()) return;
+    const rawContent = formData.get("content") as string;
+    if (!rawContent.trim()) return;
+
+    // by jh 20260205: 해시태그 파싱
+    // 예: "운동하기 #건강 #일상" -> content: "운동하기", tags: ["건강", "일상"]
+    const tagRegex = /#([\w가-힣]+)/g;
+    const tags: string[] = [];
+    const contentWithoutTags = rawContent
+      .replace(tagRegex, (match, tag) => {
+        tags.push(tag);
+        return "";
+      })
+      .trim();
+
+    // 만약 태그만 입력했다면 rawContent를 그대로 사용 (내용은 있어야 하므로)
+    const finalContent = contentWithoutTags || rawContent;
 
     setIsPending(true);
 
@@ -311,7 +371,7 @@ export function TodoList({
     const tempId = crypto.randomUUID();
     const newTodo: Todo = {
       id: tempId,
-      content,
+      content: finalContent,
       isCompleted: false,
       createdAt: new Date(),
       userId: user?.id || "guest", // Handle guest user
@@ -322,6 +382,7 @@ export function TodoList({
       isRecurring: currentRecurrence.isRecurring,
       recurrencePattern: currentRecurrence.pattern,
       recurrenceInterval: currentRecurrence.interval,
+      tags: tags,
     };
 
     // by jh 20260205: Optimistic update와 Toast를 즉시 실행하여 즉각적인 피드백 제공
@@ -332,12 +393,13 @@ export function TodoList({
 
     try {
       await addTodo(
-        content,
+        finalContent,
         currentPriority,
         currentDueDate,
         currentRecurrence.isRecurring,
         currentRecurrence.pattern,
         currentRecurrence.interval,
+        tags,
       );
     } catch (e) {
       console.error(e);
@@ -401,7 +463,7 @@ export function TodoList({
           try {
             await restoreTodo(todoToDelete);
             toast.success("실행 취소되었습니다.");
-          } catch (e) {
+          } catch (e: unknown) {
             console.error(e);
             toast.error("복구에 실패했습니다.");
           }
@@ -449,6 +511,69 @@ export function TodoList({
     await updateTodo(id, { folderId: newFolderId });
   }
 
+  // by jh 20260205: SubTodo Handlers
+  async function handleAddSubTodo(todoId: string, content: string) {
+    // 임시 ID 생성 (Optimistic용) - 실제 ID는 서버 응답 또는 useTodoManager 내부에서 처리
+    // 여기서는 optimistic state만 업데이트하면 됨. useTodoManager.addSubTodo가 실제 생성 담당.
+    // 하지만 useTodoManager.addSubTodo가 반환하는 값을 기다리면 느리므로,
+    // 여기서 임시 객체를 만들어 즉시 업데이트.
+    const tempSubTodo: SubTodo = {
+      id: crypto.randomUUID(),
+      todoId,
+      content,
+      isCompleted: false,
+      createdAt: new Date(),
+      order: Date.now(),
+    };
+
+    startTransition(() => {
+      addOptimisticTodo({
+        type: "addSubTodo",
+        todoId,
+        subTodo: tempSubTodo,
+      });
+    });
+
+    try {
+      await addSubTodo(todoId, content);
+    } catch (e) {
+      console.error(e);
+      toast.error("서브태스크 추가 실패");
+      // Rollback logic could be added here
+    }
+  }
+
+  function handleToggleSubTodo(
+    todoId: string,
+    subTodoId: string,
+    isCompleted: boolean,
+  ) {
+    startTransition(() => {
+      addOptimisticTodo({
+        type: "toggleSubTodo",
+        todoId,
+        subTodoId,
+        isCompleted,
+      });
+    });
+    toggleSubTodo(todoId, subTodoId, isCompleted).catch(() => {
+      toast.error("업데이트 실패");
+    });
+  }
+
+  function handleDeleteSubTodo(todoId: string, subTodoId: string) {
+    startTransition(() => {
+      addOptimisticTodo({
+        type: "deleteSubTodo",
+        todoId,
+        subTodoId,
+      });
+    });
+    deleteSubTodo(todoId, subTodoId).catch(() => {
+      toast.error("삭제 실패");
+    });
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
@@ -470,11 +595,26 @@ export function TodoList({
         order: (index + 1) * 1000, // Giving some space between items
       }));
 
-      // reorderTodos hook function handles it.
       reorderTodos(updates).catch((err) => {
         console.error("Reorder failed", err);
         toast.error("순서 변경 저장에 실패했습니다.");
       });
+    }
+  }
+
+  async function handleUpdateTodo(id: string, updates: Partial<Todo>) {
+    startTransition(() => {
+      addOptimisticTodo({
+        type: "update",
+        id,
+        updates,
+      });
+    });
+    try {
+      await updateTodo(id, updates);
+    } catch (e) {
+      console.error(e);
+      toast.error("업데이트 실패");
     }
   }
 
@@ -873,9 +1013,13 @@ export function TodoList({
                       folders={folders}
                       FOLDER_COLORS={FOLDER_COLORS}
                       onToggle={handleToggle}
+                      onUpdate={handleUpdateTodo} // by jh 20260205: Pass update handler
                       onDelete={handleDelete}
                       onPriorityChange={handlePriorityChange}
                       onFolderChange={handleFolderChange}
+                      onAddSubTodo={handleAddSubTodo}
+                      onToggleSubTodo={handleToggleSubTodo}
+                      onDeleteSubTodo={handleDeleteSubTodo}
                     />
                   ))}
                 </AnimatePresence>

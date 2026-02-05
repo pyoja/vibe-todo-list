@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { type Todo } from "@/app/actions/todo";
 import * as serverActions from "@/app/actions/todo";
+import { type SubTodo } from "@/app/actions/subtodo";
+import * as subTodoActions from "@/app/actions/subtodo";
 
 type TodoManagerProps = {
   initialTodos: Todo[];
@@ -79,6 +81,8 @@ export function useTodoManager({
     isRecurring: boolean = false,
     recurrencePattern?: "daily" | "weekly" | "monthly" | null,
     recurrenceInterval: number = 1,
+    // by jh 20260205: 태그 추가
+    tags: string[] = [],
   ) => {
     if (isGuest) {
       const newTodo: Todo = {
@@ -95,6 +99,7 @@ export function useTodoManager({
         isRecurring,
         recurrencePattern,
         recurrenceInterval,
+        tags,
       };
       const updated = [newTodo, ...todos];
       saveToLocal(updated);
@@ -108,6 +113,7 @@ export function useTodoManager({
         isRecurring,
         recurrencePattern,
         recurrenceInterval,
+        tags,
       );
     }
   };
@@ -162,17 +168,88 @@ export function useTodoManager({
     }
   };
 
+  // --- SubTodo Operations ---
+
+  const addSubTodo = async (todoId: string, content: string) => {
+    if (isGuest) {
+      const newSubTodo: SubTodo = {
+        id: crypto.randomUUID(),
+        todoId,
+        content,
+        isCompleted: false,
+        createdAt: new Date(),
+        order: Date.now(),
+      };
+      const updated = todos.map((t) => {
+        if (t.id === todoId) {
+          return { ...t, subTodos: [...(t.subTodos || []), newSubTodo] };
+        }
+        return t;
+      });
+      saveToLocal(updated);
+      return newSubTodo;
+    } else {
+      return await subTodoActions.createSubTodo(todoId, content);
+    }
+  };
+
+  const toggleSubTodo = async (
+    todoId: string,
+    subTodoId: string,
+    isCompleted: boolean,
+  ) => {
+    if (isGuest) {
+      const updated = todos.map((t) => {
+        if (t.id === todoId) {
+          return {
+            ...t,
+            subTodos: (t.subTodos || []).map((st) =>
+              st.id === subTodoId ? { ...st, isCompleted } : st,
+            ),
+          };
+        }
+        return t;
+      });
+      saveToLocal(updated);
+    } else {
+      await subTodoActions.toggleSubTodo(subTodoId, isCompleted);
+    }
+  };
+
+  const deleteSubTodo = async (todoId: string, subTodoId: string) => {
+    if (isGuest) {
+      const updated = todos.map((t) => {
+        if (t.id === todoId) {
+          return {
+            ...t,
+            subTodos: (t.subTodos || []).filter((st) => st.id !== subTodoId),
+          };
+        }
+        return t;
+      });
+      saveToLocal(updated);
+    } else {
+      await subTodoActions.deleteSubTodo(subTodoId);
+    }
+  };
+
   const reorderTodos = async (items: { id: string; order: number }[]) => {
     if (isGuest) {
-      const updated = [...todos];
-      items.forEach((item) => {
-        const todo = updated.find((t) => t.id === item.id);
-        if (todo) todo.order = item.order;
+      // Create a map for quick lookup of new orders
+      const orderMap = new Map(items.map((item) => [item.id, item.order]));
+      const updated = todos.map((t) => {
+        if (orderMap.has(t.id)) {
+          return { ...t, order: orderMap.get(t.id)! };
+        }
+        return t;
       });
-      // Re-sort in memory
+      // Sort immediately to reflect changes
       updated.sort((a, b) => {
         if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-        return a.order - b.order;
+        if (a.order !== b.order) return a.order - b.order;
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       });
       saveToLocal(updated);
     } else {
@@ -188,6 +265,9 @@ export function useTodoManager({
     deleteTodo,
     restoreTodo,
     reorderTodos,
+    addSubTodo,
+    toggleSubTodo,
+    deleteSubTodo,
     isGuest,
   };
 }

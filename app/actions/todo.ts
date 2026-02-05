@@ -4,6 +4,8 @@ import { auth, pool } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
+import { type SubTodo } from "./subtodo";
+
 export type Todo = {
   id: string;
   content: string;
@@ -20,6 +22,10 @@ export type Todo = {
   isRecurring?: boolean;
   recurrencePattern?: "daily" | "weekly" | "monthly" | null;
   recurrenceInterval?: number | null;
+  // by jh 20260205: 서브태스크 추가
+  subTodos?: SubTodo[];
+  // by jh 20260205: 태그 시스템 추가
+  tags?: string[];
 };
 
 async function getSession() {
@@ -34,7 +40,12 @@ export async function getTodos(folderId?: string): Promise<Todo[]> {
 
   try {
     let query = `
-      SELECT t.*, f.name as "folderName", f.color as "folderColor"
+      SELECT t.*, f.name as "folderName", f.color as "folderColor",
+      (
+        SELECT COALESCE(json_agg(st ORDER BY st."order" ASC, st."createdAt" ASC), '[]'::json)
+        FROM sub_todo st
+        WHERE st."todoId" = t.id
+      ) as "subTodos"
       FROM todo t
       LEFT JOIN folder f ON t."folderId" = f.id
       WHERE t."userId" = $1
@@ -68,13 +79,15 @@ export async function createTodo(
   isRecurring: boolean = false,
   recurrencePattern?: "daily" | "weekly" | "monthly" | null,
   recurrenceInterval: number = 1,
+  // by jh 20260205: 태그 추가
+  tags: string[] = [],
 ) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
   try {
     const res = await pool.query(
-      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate", "isRecurring", "recurrencePattern", "recurrenceInterval") VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate", "isRecurring", "recurrencePattern", "recurrenceInterval", tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
       [
         content,
         session.user.id,
@@ -84,6 +97,7 @@ export async function createTodo(
         isRecurring,
         recurrencePattern || null,
         recurrenceInterval,
+        tags,
       ],
     );
     revalidatePath("/");
@@ -156,8 +170,8 @@ export async function restoreTodo(todo: Todo) {
     // Restore with original ID and CreatedAt if possible, or new ones if conflict.
     // Here we force insert including ID.
     const query = `
-      INSERT INTO todo (id, content, "isCompleted", "createdAt", "userId", "folderId", priority, "dueDate", "order")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO todo (id, content, "isCompleted", "createdAt", "userId", "folderId", priority, "dueDate", "order", "isRecurring", "recurrencePattern", "recurrenceInterval", tags)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `;
     const params = [
@@ -170,6 +184,10 @@ export async function restoreTodo(todo: Todo) {
       todo.priority || "medium",
       todo.dueDate || null,
       todo.order || 0,
+      todo.isRecurring || false,
+      todo.recurrencePattern || null,
+      todo.recurrenceInterval || 1,
+      todo.tags || [],
     ];
 
     const res = await pool.query(query, params);

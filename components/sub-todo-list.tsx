@@ -1,0 +1,156 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { type SubTodo } from "@/app/actions/subtodo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Check, Plus, Trash2, GripVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
+import confetti from "canvas-confetti";
+
+interface SubTodoListProps {
+  todoId: string;
+  subTodos: SubTodo[];
+  onAdd: (todoId: string, content: string) => Promise<void>;
+  onToggle: (todoId: string, subTodoId: string, isCompleted: boolean) => void;
+  onDelete: (todoId: string, subTodoId: string) => void;
+}
+
+export function SubTodoList({
+  todoId,
+  subTodos,
+  onAdd,
+  onToggle,
+  onDelete,
+}: SubTodoListProps) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newSubTodoContent, setNewSubTodoContent] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newSubTodoContent.trim()) return;
+
+    const content = newSubTodoContent;
+    setNewSubTodoContent("");
+
+    // Maintain focus for rapid entry
+    inputRef.current?.focus();
+
+    await onAdd(todoId, content);
+  }
+
+  // Calculate progress
+  const total = subTodos.length;
+  const completed = subTodos.filter((st) => st.isCompleted).length;
+  const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  return (
+    <div className="w-full mt-3 space-y-2">
+      {/* Progress Bar */}
+      {total > 0 && (
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex-1 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className="text-[10px] text-zinc-400 font-medium">
+            {completed}/{total}
+          </span>
+        </div>
+      )}
+
+      {/* List */}
+      <ul className="space-y-1">
+        {subTodos.map((subTodo) => (
+          <li
+            key={subTodo.id}
+            className="group flex items-center gap-2 text-sm p-1 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-md transition-colors"
+          >
+            {/* Checkbox */}
+            <button
+              onClick={(e) => {
+                if (!subTodo.isCompleted) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = (rect.left + rect.width / 2) / window.innerWidth;
+                  const y = (rect.top + rect.height / 2) / window.innerHeight;
+                  confetti({
+                    particleCount: 15,
+                    spread: 40,
+                    origin: { x, y },
+                    colors: ["#60a5fa"],
+                    ticks: 30,
+                    gravity: 1.5,
+                    scalar: 0.6,
+                    zIndex: 9999,
+                  });
+                }
+                onToggle(todoId, subTodo.id, !subTodo.isCompleted);
+              }}
+              className={cn(
+                "flex-shrink-0 w-4 h-4 rounded-full border flex items-center justify-center transition-all",
+                subTodo.isCompleted
+                  ? "bg-blue-500 border-blue-500 text-white"
+                  : "border-zinc-300 dark:border-zinc-600 hover:border-blue-400",
+              )}
+            >
+              <Check
+                className={cn(
+                  "w-2.5 h-2.5 transition-transform",
+                  subTodo.isCompleted ? "scale-100" : "scale-0",
+                )}
+              />
+            </button>
+
+            {/* Content */}
+            <span
+              className={cn(
+                "flex-1 break-all transition-colors",
+                subTodo.isCompleted
+                  ? "text-zinc-400 line-through decoration-zinc-300"
+                  : "text-zinc-700 dark:text-zinc-200",
+              )}
+            >
+              {subTodo.content}
+            </span>
+
+            {/* Delete Button */}
+            <button
+              onClick={() => onDelete(todoId, subTodo.id)}
+              className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-red-500 transition-all"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {/* Add Form */}
+      {isAdding ? (
+        <form onSubmit={handleSubmit} className="flex items-center gap-2 pl-6">
+          <Input
+            ref={inputRef}
+            value={newSubTodoContent}
+            onChange={(e) => setNewSubTodoContent(e.target.value)}
+            placeholder="할 일 추가..."
+            className="h-7 text-xs bg-transparent border-b border-0 border-zinc-200 dark:border-zinc-800 rounded-none px-0 focus-visible:ring-0 focus-visible:border-blue-500 shadow-none"
+            autoFocus
+            onBlur={() => {
+              if (!newSubTodoContent) setIsAdding(false);
+            }}
+          />
+        </form>
+      ) : (
+        <button
+          onClick={() => setIsAdding(true)}
+          className="flex items-center gap-2 text-xs text-zinc-400 hover:text-blue-500 pl-1 py-1 transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>하위 항목 추가</span>
+        </button>
+      )}
+    </div>
+  );
+}
