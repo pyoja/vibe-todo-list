@@ -62,6 +62,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { useSoundEffects } from "@/hooks/use-sound-effects";
+import { SettingsDialog } from "./settings-dialog";
 import { SortableTodoItem } from "@/components/sortable-todo-item";
 import { CalendarView } from "@/components/calendar-view";
 import { DayCompletionCard } from "@/components/day-completion-card";
@@ -123,6 +125,35 @@ export function TodoList({
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
+  // by jh 20260205: Sound Effects
+  const { playAdd, playComplete, playDelete } = useSoundEffects();
+
+  // by jh 20260205: Global Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl + K: Focus Search
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        const searchInput = document.querySelector(
+          'input[placeholder*="검색"]',
+        ) as HTMLInputElement;
+        searchInput?.focus();
+      }
+      // Ctrl + N: Focus Add Todo
+      if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+      // Esc: Blur
+      if (e.key === "Escape") {
+        (document.activeElement as HTMLElement)?.blur();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [view, setView] = useState<"list" | "calendar">("list");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -170,7 +201,8 @@ export function TodoList({
             subTodoId: string;
             isCompleted: boolean;
           }
-        | { type: "deleteSubTodo"; todoId: string; subTodoId: string },
+        | { type: "deleteSubTodo"; todoId: string; subTodoId: string }
+        | { type: "add"; newTodo: Todo },
     ) => {
       // Handle actions
       if ("type" in newTodo) {
@@ -389,6 +421,7 @@ export function TodoList({
     startTransition(() => {
       addOptimisticTodo(newTodo);
     });
+    playAdd(); // Sound
     toast.success("할 일이 추가되었습니다.");
 
     try {
@@ -424,6 +457,8 @@ export function TodoList({
       playPop();
     }
 
+    if (!isCompleted) playComplete(); // Sound (Vibe)
+
     startTransition(() => {
       addOptimisticTodo({ type: "toggle", id, isCompleted: !isCompleted });
     });
@@ -454,6 +489,8 @@ export function TodoList({
     startTransition(() => {
       addOptimisticTodo({ type: "delete", id });
     });
+
+    playDelete(); // Sound
 
     // by jh 20260205: Toast를 즉시 표시
     toast("할 일이 삭제되었습니다.", {
@@ -621,18 +658,20 @@ export function TodoList({
   return (
     <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Dashboard Header */}
-      <DashboardHeader
-        userName={user?.name || "게스트"}
-        totalTodos={optimisticTodos.length}
-        completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
-      />
+      <div className="flex justify-between items-start mb-6">
+        <DashboardHeader
+          userName={user?.name || "게스트"}
+          totalTodos={optimisticTodos.length}
+          completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
+        />
+        <SettingsDialog initialTodos={initialTodos} />
+      </div>
 
       {/* Control Bar (Search & Filter & View Toggle) */}
       <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl p-2 shadow-sm border border-zinc-200/50 dark:border-zinc-800/50 transition-all flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
           <Input
-            ref={searchInputRef}
             placeholder="무엇을 찾고 계신가요? (Cmd+K)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
