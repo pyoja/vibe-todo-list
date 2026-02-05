@@ -67,10 +67,10 @@ export function DashboardHeader({
         </div>
 
         {/* Right: Summary Card */}
-        <div className="flex flex-col-reverse md:flex-row items-end md:items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-col gap-3 w-full md:w-auto items-end">
           <WeeklyReportDialog />
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 min-w-[300px] w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 w-full md:w-auto md:min-w-[320px]">
             <div className="flex flex-col gap-1 min-w-[120px]">
               <span className="text-xs text-blue-200 font-medium">
                 오늘의 진행률
@@ -85,18 +85,22 @@ export function DashboardHeader({
 
             <div className="hidden sm:block h-12 w-px bg-white/10 mx-2"></div>
 
-            <div className="flex flex-row sm:flex-col gap-3 sm:gap-1 items-center sm:items-end flex-1 w-full sm:w-auto justify-between sm:justify-center">
-              <div className="flex items-center gap-2 text-blue-50 bg-white/5 px-3 py-1.5 rounded-lg w-full sm:w-auto justify-between sm:justify-start">
-                <span className="text-xs opacity-70">완료한 조각</span>
+            <div className="flex flex-row sm:flex-col gap-4 sm:gap-2 items-center sm:items-start flex-1 w-full sm:w-auto justify-between sm:justify-center">
+              <div className="flex items-center gap-3 text-blue-50 w-full sm:w-auto justify-between sm:justify-start">
+                <span className="text-xs opacity-70 whitespace-nowrap">
+                  완료한 조각
+                </span>
                 <div className="flex items-center gap-1.5 font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-4 h-4" />
                   <span>{completedTodos}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-blue-50 bg-white/5 px-3 py-1.5 rounded-lg w-full sm:w-auto justify-between sm:justify-start">
-                <span className="text-xs opacity-70">남은 조각</span>
+              <div className="flex items-center gap-3 text-blue-50 w-full sm:w-auto justify-between sm:justify-start">
+                <span className="text-xs opacity-70 whitespace-nowrap">
+                  남은 조각
+                </span>
                 <div className="flex items-center gap-1.5 font-bold">
-                  <ListTodo className="w-3.5 h-3.5" />
+                  <ListTodo className="w-4 h-4" />
                   <span>{totalTodos - completedTodos}</span>
                 </div>
               </div>
