@@ -283,14 +283,12 @@ export function TodoList({
     const todoToDelete = optimisticTodos.find((t) => t.id === id);
     if (!todoToDelete) return;
 
-    // Show Undo Toast BEFORE deleting (or immediately after, since hook handles optimistic update)
-    // The hook in guest mode updates immediately. Server mode might have slight delay but optimistic ui handles it.
-    // However, the hook doesn't expose a separate "optimistic" add/remove for DELETE restoration in the same way direct useOptimistic did.
-    // But useTodoManager handles state updates.
+    // by jh 20260205: Optimistic UI 업데이트를 즉시 실행하여 즉각적인 피드백 제공
+    startTransition(() => {
+      addOptimisticTodo({ type: "delete", id });
+    });
 
-    // We will call delete first to update UI
-    await deleteTodo(id);
-
+    // by jh 20260205: Toast를 즉시 표시
     toast("할 일이 삭제되었습니다.", {
       action: {
         label: "실행 취소",
@@ -306,6 +304,14 @@ export function TodoList({
       },
       duration: 4000,
     });
+
+    // 백그라운드에서 서버 통신
+    try {
+      await deleteTodo(id);
+    } catch (e) {
+      console.error(e);
+      toast.error("삭제 중 오류가 발생했습니다.");
+    }
   }
 
   async function handlePriorityChange(
@@ -384,7 +390,7 @@ export function TodoList({
             placeholder="무엇을 찾고 계신가요?"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 h-9 bg-zinc-50/50 dark:bg-zinc-800/50 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all font-medium"
+            className="pl-9 h-9 bg-zinc-50 dark:bg-zinc-800 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400"
           />
           {searchTerm && (
             <button
@@ -489,7 +495,7 @@ export function TodoList({
                 ? `${format(selectedDate, "M월 d일", { locale: ko })} 어떤 하루를 만들까요? ✨`
                 : "오늘 어떤 순간을 남기고 싶으신가요? ✨"
             }
-            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 h-auto placeholder:text-zinc-400 dark:placeholder:text-zinc-400/90 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
+            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 min-h-[60px] placeholder:text-zinc-400 dark:placeholder:text-zinc-300 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
             autoComplete="off"
             disabled={isPending}
           />
@@ -564,9 +570,9 @@ export function TodoList({
               className="h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-4 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105"
             >
               {isPending ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
               ) : (
-                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                <Plus className="w-3.5 h-3.5 mr-1" />
               )}
               추가
             </Button>
