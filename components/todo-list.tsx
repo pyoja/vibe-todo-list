@@ -70,7 +70,7 @@ import { DayCompletionCard } from "@/components/day-completion-card";
 
 // Animation & Interaction
 import { toast } from "sonner";
-
+import { parseDateFromContent } from "@/lib/nlp"; // by jh 20260205
 import { AnimatePresence, motion } from "framer-motion";
 
 interface TodoListProps {
@@ -400,22 +400,37 @@ export function TodoList({
     setRecurrence({ isRecurring: false, pattern: null, interval: 1 }); // Reset recurrence
     formRef.current?.reset();
 
+    // by jh 20260205: NLP Parsing
+    // by jh 20260205: NLP Parsing
+    const { content: parsedContent, dueDate: parsedDueDate } =
+      parseDateFromContent(contentWithoutTags || rawContent);
+    // const finalContent = parsedContent; // Redeclaration Fixed
+
     const tempId = crypto.randomUUID();
     const newTodo: Todo = {
       id: tempId,
-      content: finalContent,
+      content: parsedContent,
       isCompleted: false,
       createdAt: new Date(),
       userId: user?.id || "guest", // Handle guest user
       folderId: folderId || null,
       priority: currentPriority,
-      dueDate: currentDueDate || null,
+      // Fix: passed Date object instead of ISO string
+      dueDate:
+        parsedDueDate || (currentDueDate ? new Date(currentDueDate) : null),
       order: Date.now(), // Newest on top or adjust as needed
       isRecurring: currentRecurrence.isRecurring,
       recurrencePattern: currentRecurrence.pattern,
       recurrenceInterval: currentRecurrence.interval,
       tags: tags,
     };
+
+    // Feedback for AI Date
+    if (parsedDueDate) {
+      toast.success("📅 날짜가 자동으로 설정되었습니다!", {
+        description: `${parsedDueDate.toLocaleString()} 로 설정됨`,
+      });
+    }
 
     // by jh 20260205: Optimistic update와 Toast를 즉시 실행하여 즉각적인 피드백 제공
     startTransition(() => {
@@ -426,9 +441,10 @@ export function TodoList({
 
     try {
       await addTodo(
-        finalContent,
+        parsedContent,
         currentPriority,
-        currentDueDate,
+        // Fix: passed Date object instead of ISO string
+        parsedDueDate || currentDueDate || undefined,
         currentRecurrence.isRecurring,
         currentRecurrence.pattern,
         currentRecurrence.interval,
