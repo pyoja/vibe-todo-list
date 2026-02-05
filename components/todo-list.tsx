@@ -22,6 +22,7 @@ import {
   X,
   LayoutList,
   CalendarDays,
+  Repeat,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
@@ -111,6 +112,11 @@ export function TodoList({
   // New Todo State
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [recurrence, setRecurrence] = useState<{
+    isRecurring: boolean;
+    pattern: "daily" | "weekly" | "monthly" | null;
+    interval: number;
+  }>({ isRecurring: false, pattern: null, interval: 1 });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showCompletionCard, setShowCompletionCard] = useState(false);
 
@@ -293,11 +299,13 @@ export function TodoList({
 
     // by jh 20260205: 상태 값을 먼저 저장한 후 form reset (사용자가 추가 입력 중인 내용 보호)
     const currentPriority = priority;
+    const currentRecurrence = recurrence;
     // If in calendar view, use selectedDate as default dueDate
     const currentDueDate = view === "calendar" ? selectedDate : dueDate;
 
     setPriority("medium");
     setDueDate(undefined);
+    setRecurrence({ isRecurring: false, pattern: null, interval: 1 }); // Reset recurrence
     formRef.current?.reset();
 
     const tempId = crypto.randomUUID();
@@ -311,6 +319,9 @@ export function TodoList({
       priority: currentPriority,
       dueDate: currentDueDate || null,
       order: Date.now(), // Newest on top or adjust as needed
+      isRecurring: currentRecurrence.isRecurring,
+      recurrencePattern: currentRecurrence.pattern,
+      recurrenceInterval: currentRecurrence.interval,
     };
 
     // by jh 20260205: Optimistic update와 Toast를 즉시 실행하여 즉각적인 피드백 제공
@@ -320,7 +331,14 @@ export function TodoList({
     toast.success("할 일이 추가되었습니다.");
 
     try {
-      await addTodo(content, currentPriority, currentDueDate);
+      await addTodo(
+        content,
+        currentPriority,
+        currentDueDate,
+        currentRecurrence.isRecurring,
+        currentRecurrence.pattern,
+        currentRecurrence.interval,
+      );
     } catch (e) {
       console.error(e);
       toast.error("할 일 추가에 실패했습니다.");
@@ -701,6 +719,109 @@ export function TodoList({
                   </PopoverContent>
                 </Popover>
               )}
+
+              {/* Recurrence Popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className={cn(
+                      "h-8 px-2 text-xs font-medium rounded-full transition-colors",
+                      recurrence.isRecurring
+                        ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-1 ring-purple-200 dark:ring-purple-800"
+                        : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
+                    )}
+                  >
+                    <Repeat className={cn("w-3.5 h-3.5 mr-1.5")} />
+                    {recurrence.isRecurring
+                      ? recurrence.pattern === "daily"
+                        ? "매일"
+                        : recurrence.pattern === "weekly"
+                          ? "매주"
+                          : "매월"
+                      : "반복"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-3 space-y-3" align="start">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-xs text-zinc-500 dark:text-zinc-400">
+                      반복 설정
+                    </h4>
+                    <div className="grid grid-cols-3 gap-1">
+                      {(["daily", "weekly", "monthly"] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() =>
+                            setRecurrence({
+                              isRecurring: true,
+                              pattern: p,
+                              interval: recurrence.interval || 1,
+                            })
+                          }
+                          className={cn(
+                            "px-2 py-1.5 rounded-md text-xs font-medium transition-all",
+                            recurrence.pattern === p
+                              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-1 ring-purple-500/20"
+                              : "bg-zinc-50 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700",
+                          )}
+                        >
+                          {p === "daily"
+                            ? "매일"
+                            : p === "weekly"
+                              ? "매주"
+                              : "매월"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {recurrence.isRecurring && (
+                    <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                      <span className="text-xs text-zinc-500">간격:</span>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={recurrence.interval}
+                        onChange={(e) =>
+                          setRecurrence({
+                            ...recurrence,
+                            interval: parseInt(e.target.value) || 1,
+                          })
+                        }
+                        className="h-7 w-16 text-xs text-center px-1"
+                      />
+                      <span className="text-xs text-zinc-500">
+                        {recurrence.pattern === "daily"
+                          ? "일마다"
+                          : recurrence.pattern === "weekly"
+                            ? "주마다"
+                            : "개월마다"}
+                      </span>
+                    </div>
+                  )}
+
+                  {recurrence.isRecurring && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full h-7 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      onClick={() =>
+                        setRecurrence({
+                          isRecurring: false,
+                          pattern: null,
+                          interval: 1,
+                        })
+                      }
+                    >
+                      반복 안 함
+                    </Button>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
 
             <Button

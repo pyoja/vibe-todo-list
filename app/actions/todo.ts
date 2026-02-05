@@ -64,14 +64,27 @@ export async function createTodo(
   folderId?: string,
   priority: string = "medium",
   dueDate?: Date | null,
+  // by jh 20260205: 반복 설정 파라미터 추가
+  isRecurring: boolean = false,
+  recurrencePattern?: "daily" | "weekly" | "monthly" | null,
+  recurrenceInterval: number = 1,
 ) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
   try {
     const res = await pool.query(
-      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate") VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [content, session.user.id, folderId || null, priority, dueDate || null],
+      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate", "isRecurring", "recurrencePattern", "recurrenceInterval") VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        content,
+        session.user.id,
+        folderId || null,
+        priority,
+        dueDate || null,
+        isRecurring,
+        recurrencePattern || null,
+        recurrenceInterval,
+      ],
     );
     revalidatePath("/");
     return res.rows[0];

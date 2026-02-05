@@ -58,7 +58,7 @@ export function useTodoManager({
             return value;
           });
           setTimeout(() => setGuestTodos(parsed), 0);
-        } catch (e) {}
+        } catch {}
       }
     }
   }, [isGuest]);
@@ -75,6 +75,10 @@ export function useTodoManager({
     content: string,
     priority: "low" | "medium" | "high" = "medium",
     dueDate?: Date,
+    // by jh 20260205: 반복 설정 파라미터 추가
+    isRecurring: boolean = false,
+    recurrencePattern?: "daily" | "weekly" | "monthly" | null,
+    recurrenceInterval: number = 1,
   ) => {
     if (isGuest) {
       const newTodo: Todo = {
@@ -87,6 +91,10 @@ export function useTodoManager({
         priority,
         dueDate: dueDate || null,
         order: Date.now(),
+        // by jh 20260205: Guest logic for recurrence
+        isRecurring,
+        recurrencePattern,
+        recurrenceInterval,
       };
       const updated = [newTodo, ...todos];
       saveToLocal(updated);
@@ -97,6 +105,9 @@ export function useTodoManager({
         folderId,
         priority,
         dueDate,
+        isRecurring,
+        recurrencePattern,
+        recurrenceInterval,
       );
     }
   };
