@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion } from "framer-motion";
+import { motion, PanInfo } from "framer-motion"; // Expanded imports
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { ko } from "date-fns/locale";
 import type { Todo } from "@/app/actions/todo";
@@ -148,6 +148,32 @@ export function SortableTodoItem({
     }
   };
 
+  // by jh 20260205: Swipe Logic
+
+  async function handleDragEnd(
+    _: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+
+    // Swipe Right -> Complete
+    if (offset > 100 || velocity > 500) {
+      if (!todo.isCompleted) {
+        confetti({
+          particleCount: 30,
+          spread: 60,
+          origin: { x: 0.2, y: 0.5 }, // approximate
+        });
+        onToggle(todo.id, true);
+      }
+    }
+    // Swipe Left -> Delete
+    else if (offset < -100 || velocity < -500) {
+      onDelete(todo.id);
+    }
+  }
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -181,8 +207,12 @@ export function SortableTodoItem({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      // Disable layout animation during drag to prevent flickering
       layout={isDragging ? false : true}
+      drag={isEditing ? false : "x"} // Disable drag when editing
+      dragConstraints={{ left: 0, right: 0 }} // Snap back
+      dragElastic={0.2}
+      onDragEnd={handleDragEnd}
+      whileDrag={{ scale: 1.02, zIndex: 100 }}
       className={cn(
         "group relative flex flex-col p-4 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-zinc-300/50 dark:hover:border-zinc-700 hover:-translate-y-0.5 w-full max-w-full",
         todo.isCompleted &&

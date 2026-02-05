@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PWAInstallManager } from "@/components/pwa/pwa-manager";
+import { PWAInstallBanner } from "@/components/pwa-install-banner"; // by jh 20260205
 
 import { cn } from "@/lib/utils";
 import { Noto_Sans_KR, Inter } from "next/font/google"; // 1. Import Inter
@@ -20,6 +21,7 @@ export const metadata = {
   metadataBase: new URL("https://vibe-todo-list-brown.vercel.app"),
   title: "하루조각 - 당신의 하루를 정리하세요",
   description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
+  manifest: "/manifest.json",
   openGraph: {
     title: "하루조각 - 당신의 하루를 정리하세요",
     description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
@@ -68,6 +70,7 @@ export default function RootLayout({
         >
           {children}
           <PWAInstallManager />
+          <PWAInstallBanner />
           <Toaster />
         </ThemeProvider>
       </body>
