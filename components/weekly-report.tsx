@@ -47,11 +47,11 @@ export function WeeklyReportDialog() {
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
-          className="text-white/70 hover:text-white hover:bg-white/10 rounded-xl"
+          className="text-white/70 hover:text-white hover:bg-white/10 h-auto self-stretch rounded-2xl px-4 flex-col gap-1 md:flex-row md:gap-2 border border-white/5 hover:border-white/20"
           title="주간 리포트"
         >
           <BarChart3 className="w-5 h-5" />
+          <span className="text-xs md:text-sm font-medium">리포트</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 p-0 overflow-hidden">

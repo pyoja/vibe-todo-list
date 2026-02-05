@@ -477,17 +477,17 @@ export function TodoList({
         <form
           ref={formRef}
           action={handleAdd}
-          className="relative flex flex-col gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-lg shadow-blue-500/5 transition-shadow hover:shadow-blue-500/10"
+          className="relative flex flex-col gap-4 bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700/50 shadow-inner group-hover:border-blue-500/30 transition-all"
         >
           <Input
             ref={inputRef}
             name="content"
             placeholder={
               view === "calendar" && selectedDate
-                ? `${format(selectedDate, "M월 d일", { locale: ko })}에 할 일을 추가하세요`
-                : "오늘 어떤 멋진 일을 계획하고 계신가요?"
+                ? `${format(selectedDate, "M월 d일", { locale: ko })} 할 일...`
+                : "할 일을 입력하세요..."
             }
-            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 h-auto placeholder:text-zinc-400 dark:placeholder:text-zinc-500 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal"
+            className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium p-0 h-auto placeholder:text-zinc-500 dark:placeholder:text-zinc-400 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
             autoComplete="off"
             disabled={isPending}
           />

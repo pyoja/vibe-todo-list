@@ -48,16 +48,18 @@ export function DashboardHeader({
 
       <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         {/* Left: Greeting & Date */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-blue-100/90 text-sm font-medium uppercase tracking-wide">
-            {new Date().toLocaleDateString("en-US", { weekday: "long" })}
-            <span className="w-1 h-1 rounded-full bg-blue-300"></span>
-            {format(new Date(), "M월 d일", { locale: ko })}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-blue-100/90 text-sm font-medium tracking-wide">
+            {format(new Date(), "yyyy년 M월 d일 EEEE", { locale: ko })}
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight">
-            {greeting}, <br className="md:hidden" />
-            <span className="text-blue-200 inline-block">{userName}</span>님.
-          </h1>
+          <div className="flex flex-col">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight text-white mb-2">
+              {greeting},
+            </h1>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight text-blue-200">
+              {userName}님.
+            </h1>
+          </div>
           <p className="text-blue-100/80 text-sm md:text-lg flex items-center gap-2 mt-1 break-keep">
             {icon}
             오늘은 어떤 하루를 그리고 계신가요?
@@ -65,32 +67,38 @@ export function DashboardHeader({
         </div>
 
         {/* Right: Summary Card */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col-reverse md:flex-row items-end md:items-center gap-2 w-full md:w-auto">
           <WeeklyReportDialog />
 
-          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 min-w-[200px]">
-            <div className="flex flex-col gap-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 min-w-[300px] w-full md:w-auto">
+            <div className="flex flex-col gap-1 min-w-[120px]">
               <span className="text-xs text-blue-200 font-medium">
                 오늘의 진행률
               </span>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold">{progress}%</span>
-                <span className="text-sm text-blue-200">완료</span>
+                <span className="text-5xl font-bold tracking-tighter">
+                  {progress}%
+                </span>
+                <span className="text-sm text-blue-200 font-medium">완료</span>
               </div>
             </div>
 
-            <div className="h-10 w-px bg-white/20 mx-2"></div>
+            <div className="hidden sm:block h-12 w-px bg-white/10 mx-2"></div>
 
-            <div className="flex flex-col gap-1 items-end flex-1">
-              <div className="flex items-center gap-1.5 text-blue-100">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span className="text-xs">{completedTodos} 완료</span>
+            <div className="flex flex-row sm:flex-col gap-3 sm:gap-1 items-center sm:items-end flex-1 w-full sm:w-auto justify-between sm:justify-center">
+              <div className="flex items-center gap-2 text-blue-50 bg-white/5 px-3 py-1.5 rounded-lg w-full sm:w-auto justify-between sm:justify-start">
+                <span className="text-xs opacity-70">완료한 조각</span>
+                <div className="flex items-center gap-1.5 font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{completedTodos}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 text-blue-100">
-                <ListTodo className="w-3.5 h-3.5" />
-                <span className="text-xs">
-                  {totalTodos - completedTodos} 남음
-                </span>
+              <div className="flex items-center gap-2 text-blue-50 bg-white/5 px-3 py-1.5 rounded-lg w-full sm:w-auto justify-between sm:justify-start">
+                <span className="text-xs opacity-70">남은 조각</span>
+                <div className="flex items-center gap-1.5 font-bold">
+                  <ListTodo className="w-3.5 h-3.5" />
+                  <span>{totalTodos - completedTodos}</span>
+                </div>
               </div>
             </div>
           </div>
