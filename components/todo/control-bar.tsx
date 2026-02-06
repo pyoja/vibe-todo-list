@@ -73,6 +73,34 @@ export function ControlBar({
           )}
         </div>
 
+        {/* View Toggle (Always Visible) */}
+        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 flex items-center shrink-0 h-9">
+          <button
+            onClick={() => setView("list")}
+            className={cn(
+              "p-1.5 rounded-md transition-all h-7 w-7 flex items-center justify-center",
+              view === "list"
+                ? "bg-white dark:bg-black shadow-sm text-blue-600"
+                : "text-zinc-400 hover:text-zinc-600",
+            )}
+            title="리스트 보기"
+          >
+            <LayoutList className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setView("calendar")}
+            className={cn(
+              "p-1.5 rounded-md transition-all h-7 w-7 flex items-center justify-center",
+              view === "calendar"
+                ? "bg-white dark:bg-black shadow-sm text-blue-600"
+                : "text-zinc-400 hover:text-zinc-600",
+            )}
+            title="캘린더 보기"
+          >
+            <CalendarDays className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Filter Toggle Button */}
         <Button
           variant="ghost"
@@ -149,34 +177,6 @@ export function ControlBar({
             <SelectItem value="name">이름</SelectItem>
           </SelectContent>
         </Select>
-
-        {/* View Toggle */}
-        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 flex items-center shrink-0 h-9">
-          <button
-            onClick={() => setView("list")}
-            className={cn(
-              "p-1.5 rounded-md transition-all h-7 w-7 flex items-center justify-center",
-              view === "list"
-                ? "bg-white dark:bg-black shadow-sm text-blue-600"
-                : "text-zinc-400 hover:text-zinc-600",
-            )}
-            title="리스트 보기"
-          >
-            <LayoutList className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setView("calendar")}
-            className={cn(
-              "p-1.5 rounded-md transition-all h-7 w-7 flex items-center justify-center",
-              view === "calendar"
-                ? "bg-white dark:bg-black shadow-sm text-blue-600"
-                : "text-zinc-400 hover:text-zinc-600",
-            )}
-            title="캘린더 보기"
-          >
-            <CalendarDays className="w-4 h-4" />
-          </button>
-        </div>
 
         <Tabs
           value={filter}
