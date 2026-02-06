@@ -534,7 +534,6 @@ export function TodoItem({
           <SubTodoList
             todoId={todo.id}
             subTodos={subTodos}
-            onAdd={onAddSubTodo}
             onToggle={onToggleSubTodo}
             onDelete={onDeleteSubTodo}
             onUpdate={onUpdateSubTodo}

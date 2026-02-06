@@ -596,7 +596,6 @@ export function TodoList({
       const { deleteFolder } = await import("@/app/actions/folder");
       await deleteFolder(folderId);
       toast.success("폴더가 삭제되었습니다.");
-      window.location.href = "/";
     } catch (error) {
       console.error(error);
       toast.error("폴더 삭제에 실패했습니다.");
@@ -627,7 +626,6 @@ export function TodoList({
       setEditingFolder(null);
       setNewFolderName("");
       setNewFolderColor("blue-500");
-      window.location.href = "/";
     } catch (error) {
       console.error(error);
       toast.error("폴더 저장에 실패했습니다.");
