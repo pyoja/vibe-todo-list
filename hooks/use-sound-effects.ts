@@ -16,10 +16,15 @@ import useSound from "use-sound";
 // Let's try to use valid public URLs for generic UI sounds.
 
 const SOUNDS = {
-  complete: "https://mj-gallery.com/assets/sounds/success.mp3", // Example placeholder
-  add: "https://mj-gallery.com/assets/sounds/pop-up-on.mp3",
-  delete: "https://mj-gallery.com/assets/sounds/trash.mp3",
-  hover: "https://mj-gallery.com/assets/sounds/click.mp3",
+  // Silent placeholder sounds to prevent console errors (CORS/404)
+  // TODO: Replace with actual sound files or reliable CDN links
+  complete:
+    "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==",
+  add: "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==",
+  delete:
+    "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==",
+  hover:
+    "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==",
 };
 
 export function useSoundEffects() {

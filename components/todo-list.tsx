@@ -460,7 +460,7 @@ export function TodoList({
 
   // Sound Effect
   const [playPop] = useSound(
-    "https://pub-3626123a908346b095493b827f311c82.r2.dev/pop_c0c.mp3",
+    "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==",
     { volume: 0.5 },
   );
 
