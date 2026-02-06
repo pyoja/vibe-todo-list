@@ -6,8 +6,8 @@ import { TodoList } from "@/components/todo-list";
 import { getTodos } from "@/app/actions/todo";
 import { LandingPage } from "@/components/landing-page";
 import { UserProfile } from "@/components/user-profile";
-
-import { Sidebar, MobileSidebar } from "@/components/sidebar";
+// by jh 20260206: Removed Sidebar, kept MobileSidebar for mobile menu
+import { MobileSidebar } from "@/components/sidebar";
 import { getFolders } from "@/app/actions/folder";
 
 export default async function Page({
@@ -44,17 +44,15 @@ export default async function Page({
             <UserProfile user={session.user} />
           </div>
         </header>
-        <div className="flex w-full">
-          <Sidebar initialFolders={folders} />
-          <main className="flex-1 py-6 px-4 sm:px-8 w-full max-w-5xl mx-auto">
-            <TodoList
-              initialTodos={todos}
-              folders={folders}
-              user={session.user}
-              folderId={params?.folderId}
-            />
-          </main>
-        </div>
+        {/* by jh 20260206: Removed sidebar flex container, now using full width */}
+        <main className="py-6 px-4 sm:px-8 w-full max-w-5xl mx-auto">
+          <TodoList
+            initialTodos={todos}
+            folders={folders}
+            user={session.user}
+            folderId={params?.folderId}
+          />
+        </main>
       </div>
     );
   }

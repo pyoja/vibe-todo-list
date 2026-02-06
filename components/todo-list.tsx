@@ -8,6 +8,7 @@ import {
   useEffect,
   startTransition,
 } from "react";
+import Link from "next/link"; // by jh 20260206: Added for folder navigation
 import { DashboardHeader } from "@/components/dashboard-header";
 import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
@@ -24,6 +25,12 @@ import {
   LayoutList,
   CalendarDays,
   Repeat,
+  FolderIcon, // by jh 20260206: Added for folder cards
+  LayoutGrid, // by jh 20260206: Added for "all todos" card
+  MoreVertical, // by jh 20260206: Added for folder menu
+  Pencil, // by jh 20260206: Added for folder edit
+  Trash2, // by jh 20260206: Added for folder delete
+  FolderPlus, // by jh 20260206: Added for new folder button
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
@@ -40,6 +47,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"; // by jh 20260206: Added for folder menu
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isSameDay } from "date-fns";
@@ -133,6 +146,13 @@ export function TodoList({
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
+
+  // by jh 20260206: Folder Management State
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderColor, setNewFolderColor] = useState("blue-500");
+
   // by jh 20260205: Sound Effects
   const { playAdd, playComplete, playDelete } = useSoundEffects();
 
@@ -469,6 +489,64 @@ export function TodoList({
       setIsPending(false);
     }
   }
+
+  // by jh 20260206: Folder Management Functions
+  const handleEditFolder = (folder: Folder) => {
+    setEditingFolder(folder);
+    setNewFolderName(folder.name);
+    setNewFolderColor(folder.color);
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    if (!confirm("이 폴더를 삭제하시겠습니까?")) return;
+
+    try {
+      const { deleteFolder } = await import("@/app/actions/folder");
+      await deleteFolder(folderId);
+      toast.success("폴더가 삭제되었습니다.");
+      // Refresh the page to update the folder list
+      window.location.href = "/";
+    } catch (error) {
+      console.error(error);
+      toast.error("폴더 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleSaveFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast.error("폴더 이름을 입력해주세요.");
+      return;
+    }
+
+    try {
+      if (editingFolder) {
+        // Update existing folder
+        const { updateFolder } = await import("@/app/actions/folder");
+        await updateFolder(editingFolder.id, {
+          name: newFolderName,
+          color: newFolderColor,
+        });
+        toast.success("폴더가 수정되었습니다.");
+      } else {
+        // Create new folder
+        const { createFolder } = await import("@/app/actions/folder");
+        await createFolder(newFolderName, newFolderColor);
+        toast.success("폴더가 생성되었습니다.");
+      }
+
+      // Reset state
+      setShowNewDialog(false);
+      setEditingFolder(null);
+      setNewFolderName("");
+      setNewFolderColor("blue-500");
+
+      // Refresh the page to update the folder list
+      window.location.href = "/";
+    } catch (error) {
+      console.error(error);
+      toast.error("폴더 저장에 실패했습니다.");
+    }
+  };
 
   // Sound Effect
   const [playPop] = useSound(
@@ -1046,6 +1124,151 @@ export function TodoList({
             </Button>
           </div>
         </form>
+      </div>
+
+      {/* by jh 20260206: Folder Section - Horizontal scrollable cards */}
+      <div className="mb-6">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {/* All Todos Card */}
+          <Link
+            href="/"
+            className={cn(
+              "flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all min-w-[120px] hover:shadow-lg",
+              !folderId
+                ? "bg-blue-50 dark:bg-blue-900/20 border-blue-400 shadow-md"
+                : "bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700",
+            )}
+          >
+            <div
+              className={cn(
+                "w-12 h-12 rounded-xl flex items-center justify-center",
+                !folderId
+                  ? "bg-blue-500 text-white"
+                  : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400",
+              )}
+            >
+              <LayoutGrid className="w-6 h-6" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                전체
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {initialTodos.length}개
+              </p>
+            </div>
+          </Link>
+
+          {/* Folder Cards */}
+          {folders.map((folder) => {
+            const folderTodoCount = initialTodos.filter(
+              (t) => t.folderId === folder.id,
+            ).length;
+            const isSelected = folderId === folder.id;
+
+            return (
+              <div key={folder.id} className="relative group flex-shrink-0">
+                <Link
+                  href={`/?folderId=${folder.id}`}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all min-w-[120px] hover:shadow-lg",
+                    isSelected
+                      ? "bg-blue-50 dark:bg-blue-900/20 border-blue-400 shadow-md"
+                      : "bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center",
+                      isSelected
+                        ? `bg-${folder.color} text-white`
+                        : "bg-zinc-100 dark:bg-zinc-800",
+                    )}
+                    style={
+                      isSelected
+                        ? {
+                            backgroundColor: folder.color.includes("-")
+                              ? `rgb(var(--${folder.color.replace("-", "-")}))`
+                              : folder.color,
+                          }
+                        : undefined
+                    }
+                  >
+                    <FolderIcon
+                      className={cn(
+                        "w-6 h-6",
+                        isSelected
+                          ? "text-white"
+                          : `text-${folder.color} dark:text-${folder.color}`,
+                      )}
+                      style={
+                        !isSelected
+                          ? {
+                              color: folder.color.includes("-")
+                                ? `rgb(var(--${folder.color.replace("-", "-")}))`
+                                : folder.color,
+                            }
+                          : undefined
+                      }
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[100px]">
+                      {folder.name}
+                    </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {folderTodoCount}개
+                    </p>
+                  </div>
+                </Link>
+                {/* Folder Menu - Shows on hover */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => handleEditFolder(folder)}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        이름 변경
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteFolder(folder.id)}
+                        className="text-red-600 dark:text-red-400"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        삭제
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            );
+          })}
+          {/* New Folder Card */}
+          <button
+            onClick={() => setShowNewDialog(true)}
+            className="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900/80 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all min-w-[120px] hover:shadow-lg"
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+              <FolderPlus className="w-6 h-6" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                새 폴더
+              </p>
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Todo List - DnD Context */}
