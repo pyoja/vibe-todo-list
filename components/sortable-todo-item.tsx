@@ -30,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { motion, PanInfo } from "framer-motion"; // Expanded imports
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { ko } from "date-fns/locale";
 import type { Todo } from "@/app/actions/todo";
@@ -156,33 +155,6 @@ export function TodoItem({
     }
   };
 
-  // by jh 20260205: Swipe Logic (Disabled in Overlay)
-  async function handleDragEnd(
-    _: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo,
-  ) {
-    if (isOverlay) return;
-
-    const offset = info.offset.x;
-    const velocity = info.velocity.x;
-
-    // Swipe Right -> Complete
-    if (offset > 100 || velocity > 500) {
-      if (!todo.isCompleted) {
-        confetti({
-          particleCount: 30,
-          spread: 60,
-          origin: { x: 0.2, y: 0.5 }, // approximate
-        });
-        onToggle(todo.id, true);
-      }
-    }
-    // Swipe Left -> Delete
-    else if (offset < -100 || velocity < -500) {
-      onDelete(todo.id);
-    }
-  }
-
   const getDueDateLabel = (date: Date) => {
     if (isToday(date)) return "오늘까지";
     if (isTomorrow(date)) return "내일까지";
@@ -202,15 +174,10 @@ export function TodoItem({
   const hasSubTodos = subTodos.length > 0;
 
   return (
-    <motion.li
+    <li
       ref={innerRef}
       style={style}
-      // by jh 20260206: Removed layout, layoutId, initial, animate, exit to fix DnD conflicts with dnd-kit
-      drag={isEditing || isOverlay ? false : "x"} // Disable swipe/drag in overlay
-      dragConstraints={{ left: 0, right: 0 }} // Snap back
-      dragElastic={0.2}
-      onDragEnd={handleDragEnd}
-      whileDrag={{ scale: 1.02, zIndex: 100 }}
+      // by jh 20260206: Changed from motion.li to li to eliminate framer-motion conflicts with dnd-kit
       className={cn(
         "group relative flex flex-col rounded-2xl transition-all duration-300 w-full max-w-full",
         // Default Style (Not dragging, Not overlay)
@@ -224,15 +191,13 @@ export function TodoItem({
           "bg-zinc-50/50 dark:bg-zinc-900/30 opacity-60 grayscale-[0.5] shadow-none hover:shadow-none hover:translate-y-0 hover:border-zinc-200/50",
 
         // Dragging Placeholder Style (Ghost Card)
-        // We MUST maintain the original size for DnD physics to work correcty.
-        // We style it as a "slot" where the item will drop.
         isDragging &&
           !isOverlay &&
-          "opacity-100 p-4 bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-blue-400/50 shadow-inner",
+          "opacity-100 p-4 bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-blue-400 shadow-inner",
 
         // Overlay Style (The item following the cursor)
         isOverlay &&
-          "p-4 bg-white dark:bg-zinc-900 opacity-90 shadow-2xl scale-[1.02] border-2 border-blue-500 z-50 cursor-grabbing ring-4 ring-blue-500/10 rotate-1",
+          "p-4 bg-white dark:bg-zinc-900 opacity-100 shadow-2xl scale-105 border-2 border-blue-500 z-50 cursor-grabbing ring-4 ring-blue-500/10",
       )}
     >
       {/* Drop Indicator (Center of the ghost card) */}
@@ -498,7 +463,7 @@ export function TodoItem({
           />
         )}
       </div>
-    </motion.li>
+    </li>
   );
 }
 
