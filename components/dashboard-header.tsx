@@ -88,20 +88,24 @@ export function DashboardHeader({
             <div className="flex flex-row sm:flex-col gap-4 sm:gap-2 items-center sm:items-start flex-1 w-full sm:w-auto justify-between sm:justify-center">
               <div className="flex items-center gap-3 text-blue-50 w-full sm:w-auto justify-between sm:justify-start">
                 <span className="text-xs opacity-70 whitespace-nowrap">
-                  완료한 조각
+                  완료 조각
                 </span>
-                <div className="flex items-center gap-1.5 font-bold">
+                <div className="inline-flex items-center gap-1.5 font-bold">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{completedTodos}</span>
+                  <span className="text-base leading-none">
+                    {completedTodos}
+                  </span>
                 </div>
               </div>
               <div className="flex items-center gap-3 text-blue-50 w-full sm:w-auto justify-between sm:justify-start">
                 <span className="text-xs opacity-70 whitespace-nowrap">
                   남은 조각
                 </span>
-                <div className="flex items-center gap-1.5 font-bold">
+                <div className="inline-flex items-center gap-1.5 font-bold">
                   <ListTodo className="w-4 h-4" />
-                  <span>{totalTodos - completedTodos}</span>
+                  <span className="text-base leading-none">
+                    {totalTodos - completedTodos}
+                  </span>
                 </div>
               </div>
             </div>

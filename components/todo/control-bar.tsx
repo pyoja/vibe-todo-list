@@ -48,7 +48,7 @@ export function ControlBar({
       <div className="relative flex-1">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
         <Input
-          placeholder="무엇을 찾고 계신가요? (Cmd+K)"
+          placeholder="무엇을 찾고 계신가요?"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-9 h-9 bg-zinc-50 dark:bg-zinc-800 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400"
