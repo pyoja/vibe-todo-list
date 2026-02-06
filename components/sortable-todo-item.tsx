@@ -10,8 +10,7 @@ import {
   Folder as FolderIcon,
   FolderOpen,
   GripVertical,
-  ChevronDown,
-  ChevronRight,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -151,6 +150,8 @@ export function TodoItem({
 }: TodoItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  const [isAddingSubTask, setIsAddingSubTask] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
 
   // Focus input when editing starts
@@ -304,17 +305,6 @@ export function TodoItem({
                     {todo.content}
                   </span>
                 )}
-
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="p-1 -mt-1 text-zinc-400 hover:text-blue-500 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                </button>
               </div>
 
               {/* Meta Tags */}
@@ -339,9 +329,6 @@ export function TodoItem({
                         mode="single"
                         selected={new Date(todo.dueDate)}
                         onSelect={(date) => {
-                          // Date | undefined
-                          // If undefined (deselected), we can either remove the date or ignore.
-                          // Let's assume we update it.
                           onUpdate(todo.id, { dueDate: date ?? null });
                         }}
                         initialFocus
@@ -372,23 +359,12 @@ export function TodoItem({
                 )}
 
                 {/* Priority */}
-                {todo.priority && todo.priority !== "medium" && (
+                {todo.priority === "high" && (
                   <Badge
-                    variant="secondary"
-                    className={cn(
-                      "px-1.5 py-0 h-5 font-normal text-[10px] bg-white border pointer-events-none gap-1",
-                      todo.priority === "high"
-                        ? "text-red-500 border-red-100"
-                        : "text-zinc-500 border-zinc-100",
-                    )}
+                    variant="outline"
+                    className="text-red-500 border-red-200 bg-red-50 dark:bg-red-900/20"
                   >
-                    <div
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full",
-                        todo.priority === "high" ? "bg-red-500" : "bg-zinc-400",
-                      )}
-                    />
-                    {todo.priority === "high" ? "중요" : "낮음"}
+                    중요
                   </Badge>
                 )}
 
@@ -438,6 +414,42 @@ export function TodoItem({
 
           {/* Actions Area */}
           <div className="mt-0 flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+            {/* Add Subtask Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+                setIsAddingSubTask(true);
+              }}
+              className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              title="하위 항목 추가"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+
+            {/* Calendar Selection */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  title="날짜 설정"
+                >
+                  <CalendarIcon className="w-4 h-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={todo.dueDate ? new Date(todo.dueDate) : undefined}
+                  onSelect={(date) => {
+                    onUpdate(todo.id, { dueDate: date ?? null });
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
             {/* Folder Selection - Hidden on Mobile, shown on hover/desktop */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -479,6 +491,41 @@ export function TodoItem({
             </button>
           </div>
         </div>
+
+        {/* Sub Task Input */}
+        {isAddingSubTask && (
+          <div className="pl-12 pr-4 py-2 animate-in slide-in-from-top-1 duration-200">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.currentTarget;
+                const input = form.elements.namedItem(
+                  "content",
+                ) as HTMLInputElement;
+                if (input.value.trim()) {
+                  onAddSubTodo(todo.id, input.value);
+                  input.value = "";
+                  setIsAddingSubTask(false);
+                }
+              }}
+              className="flex items-center gap-2"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+              <input
+                name="content"
+                autoFocus
+                className="flex-1 bg-transparent border-none text-sm focus:ring-0 placeholder:text-zinc-400 outline-none"
+                placeholder="하위 항목 입력..."
+                onBlur={() => {
+                  setTimeout(() => setIsAddingSubTask(false), 100);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") setIsAddingSubTask(false);
+                }}
+              />
+            </form>
+          </div>
+        )}
 
         {/* Sub Tasks Section */}
         {isExpanded && (
