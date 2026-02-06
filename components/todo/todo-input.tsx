@@ -153,8 +153,9 @@ export function TodoInput({
           disabled={isPending}
         />
 
-        <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
+          {/* First Row: Option Buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
             <Select
               value={priority}
               onValueChange={(v: string) =>
@@ -391,15 +392,16 @@ export function TodoInput({
             </Popover>
           </div>
 
+          {/* Second Row: Submit Button */}
           <Button
             type="submit"
             disabled={isPending}
-            className="h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-4 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105"
+            className="w-full md:w-auto md:self-end h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 text-sm font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105"
           >
             {isPending ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+              <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
             ) : (
-              <Plus className="w-3.5 h-3.5 mr-1" />
+              <Plus className="w-4 h-4 mr-1.5" />
             )}
             추가
           </Button>
