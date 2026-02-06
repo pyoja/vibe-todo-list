@@ -364,9 +364,6 @@ export function TodoList({
       priority: meta.priority,
       dueDate: parsedDueDate || (meta.dueDate ? new Date(meta.dueDate) : null),
       order: Date.now(),
-      isRecurring: meta.recurrence.isRecurring,
-      recurrencePattern: meta.recurrence.pattern,
-      recurrenceInterval: meta.recurrence.interval,
       tags: tags,
     };
 
@@ -385,11 +382,9 @@ export function TodoList({
     try {
       await addTodo(
         parsedContent,
+        targetFolderId || undefined,
         meta.priority,
         parsedDueDate || meta.dueDate || undefined,
-        meta.recurrence.isRecurring,
-        meta.recurrence.pattern,
-        meta.recurrence.interval,
         tags,
       );
     } catch (e) {

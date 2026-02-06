@@ -76,11 +76,6 @@ export async function createTodo(
   folderId?: string,
   priority: string = "medium",
   dueDate?: Date | null,
-  // by jh 20260205: 반복 설정 파라미터 추가
-  isRecurring: boolean = false,
-  recurrencePattern?: "daily" | "weekly" | "monthly" | null,
-  recurrenceInterval: number = 1,
-  // by jh 20260205: 태그 추가
   tags: string[] = [],
 ) {
   const session = await getSession();
@@ -88,16 +83,13 @@ export async function createTodo(
 
   try {
     const res = await pool.query(
-      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate", "isRecurring", "recurrencePattern", "recurrenceInterval", tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate", tags) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
       [
         content,
         session.user.id,
         folderId || null,
         priority,
         dueDate || null,
-        isRecurring,
-        recurrencePattern || null,
-        recurrenceInterval,
         tags,
       ],
     );
@@ -141,50 +133,10 @@ export async function updateTodo(
   }
 }
 
-import { addDays, addWeeks, addMonths } from "date-fns";
-
 export async function toggleTodo(id: string, isCompleted: boolean) {
   const updatedTodo = await updateTodo(id, { isCompleted });
 
-  // by jh 20260205: 반복 일정 자동 생성 로직
-  if (updatedTodo && isCompleted && updatedTodo.isRecurring) {
-    try {
-      let nextDueDate: Date | null = null;
-      if (updatedTodo.dueDate) {
-        const currentDueDate = new Date(updatedTodo.dueDate);
-        const interval = updatedTodo.recurrenceInterval || 1;
-
-        switch (updatedTodo.recurrencePattern) {
-          case "daily":
-            nextDueDate = addDays(currentDueDate, interval);
-            break;
-          case "weekly":
-            nextDueDate = addWeeks(currentDueDate, interval);
-            break;
-          case "monthly":
-            nextDueDate = addMonths(currentDueDate, interval);
-            break;
-        }
-      }
-
-      // 다음 일정 생성 (완료되지 않은 상태로)
-      if (nextDueDate) {
-        await createTodo(
-          updatedTodo.content,
-          updatedTodo.folderId || undefined,
-          updatedTodo.priority || "medium",
-          nextDueDate,
-          true, // isRecurring
-          updatedTodo.recurrencePattern,
-          updatedTodo.recurrenceInterval || 1,
-          updatedTodo.tags || [],
-        );
-      }
-    } catch (e) {
-      console.error("Failed to create next recurring todo:", e);
-      // 실패하더라도 원래 투두의 완료 상태 처리는 성공한 것이므로 에러를 throw하지 않음 (선택사항)
-    }
-  }
+  revalidatePath("/");
 
   return updatedTodo;
 }

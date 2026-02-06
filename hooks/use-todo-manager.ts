@@ -3,7 +3,6 @@ import { type Todo } from "@/app/actions/todo";
 import * as serverActions from "@/app/actions/todo";
 import { type SubTodo } from "@/app/actions/subtodo";
 import * as subTodoActions from "@/app/actions/subtodo";
-import { addDays, addWeeks, addMonths } from "date-fns";
 
 type TodoManagerProps = {
   initialTodos: Todo[];
@@ -11,11 +10,7 @@ type TodoManagerProps = {
   folderId?: string;
 };
 
-export function useTodoManager({
-  initialTodos,
-  userId,
-  folderId,
-}: TodoManagerProps) {
+export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
   const isGuest = !userId;
   const mounted = useRef(false);
 
@@ -76,13 +71,9 @@ export function useTodoManager({
 
   const addTodo = async (
     content: string,
+    folderId?: string,
     priority: "low" | "medium" | "high" = "medium",
     dueDate?: Date,
-    // by jh 20260205: 반복 설정 파라미터 추가
-    isRecurring: boolean = false,
-    recurrencePattern?: "daily" | "weekly" | "monthly" | null,
-    recurrenceInterval: number = 1,
-    // by jh 20260205: 태그 추가
     tags: string[] = [],
   ) => {
     if (isGuest) {
@@ -96,10 +87,6 @@ export function useTodoManager({
         priority,
         dueDate: dueDate || null,
         order: Date.now(),
-        // by jh 20260205: Guest logic for recurrence
-        isRecurring,
-        recurrencePattern,
-        recurrenceInterval,
         tags,
       };
       const updated = [newTodo, ...todos];
@@ -111,64 +98,16 @@ export function useTodoManager({
         folderId,
         priority,
         dueDate,
-        isRecurring,
-        recurrencePattern,
-        recurrenceInterval,
         tags,
       );
     }
   };
 
-  // ...
-
   const toggleTodo = async (id: string, isCompleted: boolean) => {
     if (isGuest) {
-      let updated = todos.map((t) =>
+      const updated = todos.map((t) =>
         t.id === id ? { ...t, isCompleted: isCompleted } : t,
       );
-
-      // by jh 20260205: Guest Recurring Logic
-      if (isCompleted) {
-        const todo = todos.find((t) => t.id === id);
-        if (todo && todo.isRecurring) {
-          let nextDueDate: Date | null = null;
-          if (todo.dueDate) {
-            const currentDueDate = new Date(todo.dueDate);
-            const interval = todo.recurrenceInterval || 1;
-
-            switch (todo.recurrencePattern) {
-              case "daily":
-                nextDueDate = addDays(currentDueDate, interval);
-                break;
-              case "weekly":
-                nextDueDate = addWeeks(currentDueDate, interval);
-                break;
-              case "monthly":
-                nextDueDate = addMonths(currentDueDate, interval);
-                break;
-            }
-          }
-
-          if (nextDueDate) {
-            const newTodo: Todo = {
-              id: crypto.randomUUID(),
-              content: todo.content,
-              isCompleted: false, // New instance is active
-              createdAt: new Date(),
-              userId: "guest",
-              folderId: todo.folderId,
-              priority: todo.priority,
-              dueDate: nextDueDate,
-              order: Date.now(),
-              isRecurring: true,
-              recurrencePattern: todo.recurrencePattern,
-              recurrenceInterval: todo.recurrenceInterval,
-              tags: todo.tags || [],
-            };
-            updated = [newTodo, ...updated];
-          }
-        }
-      }
 
       saveToLocal(updated);
     } else {

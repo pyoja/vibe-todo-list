@@ -5,7 +5,6 @@ import {
   Plus,
   Loader2,
   Calendar as CalendarIcon,
-  Repeat,
   Folder as FolderIcon,
   Inbox,
   Check,
@@ -41,11 +40,6 @@ import { type Folder } from "@/app/actions/folder";
 export interface TodoInputMeta {
   priority: "low" | "medium" | "high";
   dueDate?: Date;
-  recurrence: {
-    isRecurring: boolean;
-    pattern: "daily" | "weekly" | "monthly" | null;
-    interval: number;
-  };
   folderId?: string | null;
 }
 
@@ -75,11 +69,6 @@ export function TodoInput({
     defaultPriority,
   );
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
-  const [recurrence, setRecurrence] = useState<{
-    isRecurring: boolean;
-    pattern: "daily" | "weekly" | "monthly" | null;
-    interval: number;
-  }>({ isRecurring: false, pattern: null, interval: 1 });
 
   const [selectedFolderId, setSelectedFolderId] = useState<
     string | "inbox" | null
@@ -113,18 +102,12 @@ export function TodoInput({
     onAdd(formData, {
       priority,
       dueDate,
-      recurrence,
       folderId: selectedFolderId === "inbox" ? null : selectedFolderId,
     });
 
-    // Reset local state (partially - keep folder selection?)
-    // Decision: Keep folder selection as is for consecutive adds, or reset?
-    // Let's reset to defaultFolderId (current view)
+    // Reset local state
     setPriority("medium");
     setDueDate(undefined);
-    setRecurrence({ isRecurring: false, pattern: null, interval: 1 });
-    // Don't reset folder here to let user add multiple items to same folder?
-    // Usually standard behavior is to stay or reset. Let's reset to current context.
     setSelectedFolderId(defaultFolderId || "inbox");
 
     formRef.current?.reset();
@@ -153,9 +136,8 @@ export function TodoInput({
           disabled={isPending}
         />
 
-        <div className="flex flex-col gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
-          {/* First Row: Option Buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
+          <div className="flex items-center gap-2">
             <Select
               value={priority}
               onValueChange={(v: string) =>
@@ -287,121 +269,17 @@ export function TodoInput({
                 </PopoverContent>
               </Popover>
             )}
-
-            {/* Recurrence Popover */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  className={cn(
-                    "h-8 px-2 text-xs font-medium rounded-full transition-colors",
-                    recurrence.isRecurring
-                      ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-1 ring-purple-200 dark:ring-purple-800"
-                      : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800",
-                  )}
-                >
-                  <Repeat className={cn("w-3.5 h-3.5 mr-1.5")} />
-                  {recurrence.isRecurring
-                    ? recurrence.pattern === "daily"
-                      ? "매일"
-                      : recurrence.pattern === "weekly"
-                        ? "매주"
-                        : "매월"
-                    : "반복"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-3 space-y-3" align="start">
-                <div className="space-y-2">
-                  <h4 className="font-medium text-xs text-zinc-500 dark:text-zinc-400">
-                    반복 설정
-                  </h4>
-                  <div className="grid grid-cols-3 gap-1">
-                    {(["daily", "weekly", "monthly"] as const).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() =>
-                          setRecurrence({
-                            isRecurring: true,
-                            pattern: p,
-                            interval: recurrence.interval || 1,
-                          })
-                        }
-                        className={cn(
-                          "px-2 py-1.5 rounded-md text-xs font-medium transition-all",
-                          recurrence.pattern === p
-                            ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 ring-1 ring-purple-500/20"
-                            : "bg-zinc-50 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700",
-                        )}
-                      >
-                        {p === "daily"
-                          ? "매일"
-                          : p === "weekly"
-                            ? "매주"
-                            : "매월"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {recurrence.isRecurring && (
-                  <div className="flex items-center gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                    <span className="text-xs text-zinc-500">간격:</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={recurrence.interval}
-                      onChange={(e) =>
-                        setRecurrence({
-                          ...recurrence,
-                          interval: parseInt(e.target.value) || 1,
-                        })
-                      }
-                      className="h-7 w-16 text-xs text-center px-1"
-                    />
-                    <span className="text-xs text-zinc-500">
-                      {recurrence.pattern === "daily"
-                        ? "일마다"
-                        : recurrence.pattern === "weekly"
-                          ? "주마다"
-                          : "개월마다"}
-                    </span>
-                  </div>
-                )}
-
-                {recurrence.isRecurring && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="w-full h-7 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    onClick={() =>
-                      setRecurrence({
-                        isRecurring: false,
-                        pattern: null,
-                        interval: 1,
-                      })
-                    }
-                  >
-                    반복 안 함
-                  </Button>
-                )}
-              </PopoverContent>
-            </Popover>
           </div>
 
-          {/* Second Row: Submit Button */}
           <Button
             type="submit"
             disabled={isPending}
-            className="w-full md:w-auto md:self-end h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-6 text-sm font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105"
+            className="h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-4 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105"
           >
             {isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
             ) : (
-              <Plus className="w-4 h-4 mr-1.5" />
+              <Plus className="w-3.5 h-3.5 mr-1" />
             )}
             추가
           </Button>
