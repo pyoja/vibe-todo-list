@@ -176,8 +176,8 @@ export function TodoList({
     "all" | "overdue" | "today" | "week"
   >("all");
   const [sortBy, setSortBy] = useState<
-    "created" | "dueDate" | "priority" | "name"
-  >("created");
+    "created" | "dueDate" | "priority" | "name" | "manual"
+  >("manual");
 
   const {
     todos: sourceTodos,
@@ -331,29 +331,33 @@ export function TodoList({
     });
 
     // Sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "dueDate":
-          if (!a.dueDate) return 1;
-          if (!b.dueDate) return -1;
-          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-        case "priority": {
-          const priorityOrder: Record<string, number> = {
-            high: 3,
-            medium: 2,
-            low: 1,
-          };
-          const pA = a.priority ? priorityOrder[a.priority] || 2 : 2;
-          const pB = b.priority ? priorityOrder[b.priority] || 2 : 2;
-          return pB - pA;
+    if (sortBy !== "manual") {
+      result.sort((a, b) => {
+        switch (sortBy) {
+          case "dueDate":
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return (
+              new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+            );
+          case "priority": {
+            const priorityOrder: Record<string, number> = {
+              high: 3,
+              medium: 2,
+              low: 1,
+            };
+            const pA = a.priority ? priorityOrder[a.priority] || 2 : 2;
+            const pB = b.priority ? priorityOrder[b.priority] || 2 : 2;
+            return pB - pA;
+          }
+          case "name":
+            return a.content.localeCompare(b.content, "ko");
+          case "created":
+          default:
+            return b.createdAt.getTime() - a.createdAt.getTime();
         }
-        case "name":
-          return a.content.localeCompare(b.content, "ko");
-        case "created":
-        default:
-          return b.createdAt.getTime() - a.createdAt.getTime();
-      }
-    });
+      });
+    }
 
     return result;
 
@@ -747,13 +751,16 @@ export function TodoList({
           <Select
             value={sortBy}
             onValueChange={(value) =>
-              setSortBy(value as "created" | "dueDate" | "priority" | "name")
+              setSortBy(
+                value as "created" | "dueDate" | "priority" | "name" | "manual",
+              )
             }
           >
             <SelectTrigger className="h-9 w-28 text-xs">
               <SelectValue placeholder="정렬" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="manual">직접 설정</SelectItem>
               <SelectItem value="created">생성일</SelectItem>
               <SelectItem value="dueDate">마감일</SelectItem>
               <SelectItem value="priority">우선순위</SelectItem>
@@ -1096,6 +1103,8 @@ export function TodoList({
                       onAddSubTodo={handleAddSubTodo}
                       onToggleSubTodo={handleToggleSubTodo}
                       onDeleteSubTodo={handleDeleteSubTodo}
+                      // Pass global drag state
+                      isDragActive={!!activeId}
                     />
                   ))}
                 </SortableContext>

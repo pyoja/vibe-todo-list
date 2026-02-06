@@ -1,5 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { DraggableAttributes } from "@dnd-kit/core";
+import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import confetti from "canvas-confetti";
 import {
   Check,
@@ -53,6 +55,7 @@ interface SortableTodoItemProps {
     isCompleted: boolean,
   ) => void;
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
+  isDragActive?: boolean;
 }
 
 // Separate component to avoid "Cannot create components during render" error
@@ -96,12 +99,10 @@ function FolderMenuContent({
   );
 }
 
-// ... (imports remain mostly same, check if TodoItem needs them)
-
 interface TodoItemProps extends SortableTodoItemProps {
   style?: React.CSSProperties;
-  attributes?: any;
-  listeners?: any;
+  attributes?: DraggableAttributes;
+  listeners?: SyntheticListenerMap;
   isDragging?: boolean;
   isOverlay?: boolean;
   innerRef?: React.Ref<HTMLLIElement>;
@@ -125,6 +126,7 @@ export function TodoItem({
   isDragging,
   isOverlay,
   innerRef,
+  isDragActive,
 }: TodoItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -209,7 +211,7 @@ export function TodoItem({
       initial={isOverlay ? undefined : { opacity: 0, y: 10 }}
       animate={isOverlay ? undefined : { opacity: 1, y: 0 }}
       exit={isOverlay ? undefined : { opacity: 0, scale: 0.95 }}
-      layout={isDragging || isOverlay ? false : true}
+      layout={isDragActive || isOverlay ? false : true} // Disable layout animation if ANY item is being dragged globally, OR if this item is passing to overlay
       drag={isEditing || isOverlay ? false : "x"} // Disable swipe/drag in overlay
       dragConstraints={{ left: 0, right: 0 }} // Snap back
       dragElastic={0.2}
@@ -500,6 +502,7 @@ export function SortableTodoItem(props: SortableTodoItemProps) {
       attributes={attributes}
       listeners={listeners}
       isDragging={isDragging}
+      isDragActive={props.isDragActive}
     />
   );
 }
