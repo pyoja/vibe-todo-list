@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Sun, Moon, CloudSun, CheckCircle2, ListTodo } from "lucide-react";
-import { WeeklyReportDialog } from "@/components/weekly-report";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -68,8 +67,6 @@ export function DashboardHeader({
 
         {/* Right: Summary Card */}
         <div className="flex flex-col gap-3 w-full md:w-auto items-end">
-          <WeeklyReportDialog />
-
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 w-full md:w-auto md:min-w-[320px]">
             <div className="flex flex-col gap-1 min-w-[120px]">
               <span className="text-xs text-blue-200 font-medium">
