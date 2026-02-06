@@ -63,7 +63,6 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
-import { SettingsDialog } from "./settings-dialog";
 import { SortableTodoItem } from "@/components/sortable-todo-item";
 import { CalendarView } from "@/components/calendar-view";
 import { DayCompletionCard } from "@/components/day-completion-card";
@@ -680,7 +679,6 @@ export function TodoList({
           totalTodos={optimisticTodos.length}
           completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
         />
-        <SettingsDialog initialTodos={initialTodos} />
       </div>
 
       {/* Control Bar (Search & Filter & View Toggle) */}

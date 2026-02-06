@@ -284,3 +284,28 @@ export async function reorderTodos(items: { id: string; order: number }[]) {
     throw new Error("Failed to reorder todos");
   }
 }
+
+export async function getTodosForExport() {
+  const session = await getSession();
+  if (!session) return [];
+
+  try {
+    const query = `
+      SELECT t.*, f.name as "folderName", f.color as "folderColor",
+      (
+        SELECT COALESCE(json_agg(st ORDER BY st."order" ASC, st."createdAt" ASC), '[]'::json)
+        FROM sub_todo st
+        WHERE st."todoId" = t.id
+      ) as "subTodos"
+      FROM todo t
+      LEFT JOIN folder f ON t."folderId" = f.id
+      WHERE t."userId" = $1 AND t."deleted_at" IS NULL
+      ORDER BY t."createdAt" DESC
+    `;
+    const res = await pool.query(query, [session.user.id]);
+    return res.rows;
+  } catch (error) {
+    console.error("Failed to fetch todos for export:", error);
+    return [];
+  }
+}

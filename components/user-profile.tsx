@@ -156,11 +156,7 @@ export function UserProfile({ user }: UserProfileProps) {
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setIsProfileOpen(true)}>
             <UserIcon className="mr-2 h-4 w-4" />
-            <span>프로필 편집</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>설정</span>
+            <span>프로필 및 설정</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -178,11 +174,11 @@ export function UserProfile({ user }: UserProfileProps) {
       </DropdownMenu>
 
       <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>프로필 편집</DialogTitle>
+            <DialogTitle>프로필 및 설정</DialogTitle>
             <DialogDescription>
-              사용자 정보를 수정할 수 있습니다.
+              사용자 정보와 앱 설정을 관리할 수 있습니다.
             </DialogDescription>
           </DialogHeader>
 
@@ -191,42 +187,49 @@ export function UserProfile({ user }: UserProfileProps) {
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
           ) : (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="name"
-                  className="text-right text-sm font-medium"
-                >
-                  이름
-                </label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="email"
-                  className="text-right text-sm font-medium"
-                >
-                  이메일
-                </label>
-                <Input
-                  id="email"
-                  value={user.email}
-                  disabled
-                  className="col-span-3 opacity-70 bg-slate-100 dark:bg-zinc-800"
-                />
-              </div>
-
-              {/* Notification Settings Section */}
-              <div className="border-t pt-4 mt-2">
-                <h4 className="mb-4 text-sm font-medium flex items-center gap-2">
-                  <Bell className="w-4 h-4" /> 알림 설정
+            <div className="grid gap-6 py-4">
+              {/* Tabs or Sections */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  기본 정보
                 </h4>
                 <div className="grid gap-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label
+                      htmlFor="name"
+                      className="text-right text-sm font-medium"
+                    >
+                      이름
+                    </label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <label
+                      htmlFor="email"
+                      className="text-right text-sm font-medium"
+                    >
+                      이메일
+                    </label>
+                    <Input
+                      id="email"
+                      value={user.email}
+                      disabled
+                      className="col-span-3 opacity-70 bg-slate-100 dark:bg-zinc-800"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t pt-4 border-zinc-100 dark:border-zinc-800">
+                <h4 className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  <Bell className="w-4 h-4" /> 알림 설정
+                </h4>
+                <div className="grid gap-4 pl-1">
                   <div className="flex items-center justify-between">
                     <label
                       htmlFor="pushEnabled"
@@ -244,11 +247,11 @@ export function UserProfile({ user }: UserProfileProps) {
                   </div>
 
                   {pushEnabled && (
-                    <>
+                    <div className="space-y-3 bg-slate-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-slate-100 dark:border-zinc-800 text-sm">
                       <div className="grid grid-cols-4 items-center gap-4">
                         <label
                           htmlFor="morningTime"
-                          className="text-right text-sm text-muted-foreground"
+                          className="text-right text-muted-foreground"
                         >
                           모닝 브리핑
                         </label>
@@ -257,13 +260,13 @@ export function UserProfile({ user }: UserProfileProps) {
                           type="time"
                           value={morningTime}
                           onChange={(e) => setMorningTime(e.target.value)}
-                          className="col-span-3"
+                          className="col-span-3 h-8"
                         />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <label
                           htmlFor="eveningTime"
-                          className="text-right text-sm text-muted-foreground"
+                          className="text-right text-muted-foreground"
                         >
                           저녁 회고
                         </label>
@@ -272,15 +275,15 @@ export function UserProfile({ user }: UserProfileProps) {
                           type="time"
                           value={eveningTime}
                           onChange={(e) => setEveningTime(e.target.value)}
-                          className="col-span-3"
+                          className="col-span-3 h-8"
                         />
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-1">
                         <label
                           htmlFor="weekendDnd"
-                          className="text-sm text-muted-foreground cursor-pointer"
+                          className="text-muted-foreground cursor-pointer"
                         >
-                          주말에는 알림 끄기
+                          주말 알림 끄기
                         </label>
                         <Checkbox
                           id="weekendDnd"
@@ -290,8 +293,32 @@ export function UserProfile({ user }: UserProfileProps) {
                           }
                         />
                       </div>
-                    </>
+                    </div>
                   )}
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t pt-4 border-zinc-100 dark:border-zinc-800">
+                <h4 className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  <Settings className="w-4 h-4" /> 데이터 관리
+                </h4>
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">데이터 내보내기</span>
+                    <span className="text-xs text-zinc-500">
+                      전체 할 일을 JSON 파일로 다운로드합니다.
+                    </span>
+                  </div>
+                  <DownloadButton />
+                </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">휴지통</span>
+                    <span className="text-xs text-zinc-500">
+                      삭제된 할 일을 관리합니다.
+                    </span>
+                  </div>
+                  <TrashDialog />
                 </div>
               </div>
             </div>
@@ -311,3 +338,36 @@ export function UserProfile({ user }: UserProfileProps) {
     </>
   );
 }
+
+import { TrashDialog } from "@/components/trash-dialog";
+import { Download } from "lucide-react";
+import { getTodosForExport } from "@/app/actions/todo";
+
+function DownloadButton() {
+  const handleExport = async () => {
+    try {
+      const todos = await getTodosForExport();
+      const dataStr = JSON.stringify(todos, null, 2);
+      const dataUri =
+        "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+      const exportFileDefaultName = `vibe-todo-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+      const linkElement = document.createElement("a");
+      linkElement.setAttribute("href", dataUri);
+      linkElement.setAttribute("download", exportFileDefaultName);
+      linkElement.click();
+      toast.success("백업 파일이 다운로드되었습니다.");
+    } catch (e) {
+      console.error(e);
+      toast.error("내보내기 실패");
+    }
+  };
+
+  return (
+    <Button onClick={handleExport} variant="outline" size="sm">
+      <Download className="w-4 h-4 mr-2" />
+      내보내기
+    </Button>
+  );
+
