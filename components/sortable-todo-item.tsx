@@ -96,7 +96,18 @@ function FolderMenuContent({
   );
 }
 
-export function SortableTodoItem({
+// ... (imports remain mostly same, check if TodoItem needs them)
+
+interface TodoItemProps extends SortableTodoItemProps {
+  style?: React.CSSProperties;
+  attributes?: any;
+  listeners?: any;
+  isDragging?: boolean;
+  isOverlay?: boolean;
+  innerRef?: React.Ref<HTMLLIElement>;
+}
+
+export function TodoItem({
   todo,
   folders,
   FOLDER_COLORS,
@@ -108,19 +119,16 @@ export function SortableTodoItem({
   onAddSubTodo,
   onToggleSubTodo,
   onDeleteSubTodo,
-}: SortableTodoItemProps) {
+  style,
+  attributes,
+  listeners,
+  isDragging,
+  isOverlay,
+  innerRef,
+}: TodoItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: todo.id });
 
   // Focus input when editing starts
   useEffect(() => {
@@ -148,12 +156,13 @@ export function SortableTodoItem({
     }
   };
 
-  // by jh 20260205: Swipe Logic
-
+  // by jh 20260205: Swipe Logic (Disabled in Overlay)
   async function handleDragEnd(
     _: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo,
   ) {
+    if (isOverlay) return;
+
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 
@@ -173,13 +182,6 @@ export function SortableTodoItem({
       onDelete(todo.id);
     }
   }
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : 1,
-    position: "relative" as const,
-  };
 
   const getDueDateLabel = (date: Date) => {
     if (isToday(date)) return "오늘까지";
@@ -201,14 +203,14 @@ export function SortableTodoItem({
 
   return (
     <motion.li
-      ref={setNodeRef}
+      ref={innerRef}
       style={style}
-      layoutId={todo.id}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      layout={isDragging ? false : true}
-      drag={isEditing ? false : "x"} // Disable drag when editing
+      layoutId={isOverlay ? undefined : todo.id} // Disable layoutId in overlay to prevent conflicts
+      initial={isOverlay ? undefined : { opacity: 0, y: 10 }}
+      animate={isOverlay ? undefined : { opacity: 1, y: 0 }}
+      exit={isOverlay ? undefined : { opacity: 0, scale: 0.95 }}
+      layout={isDragging || isOverlay ? false : true}
+      drag={isEditing || isOverlay ? false : "x"} // Disable swipe/drag in overlay
       dragConstraints={{ left: 0, right: 0 }} // Snap back
       dragElastic={0.2}
       onDragEnd={handleDragEnd}
@@ -217,8 +219,9 @@ export function SortableTodoItem({
         "group relative flex flex-col p-4 rounded-2xl bg-white dark:bg-zinc-900/80 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-zinc-300/50 dark:hover:border-zinc-700 hover:-translate-y-0.5 w-full max-w-full",
         todo.isCompleted &&
           "bg-zinc-50/50 dark:bg-zinc-900/30 opacity-60 grayscale-[0.5] shadow-none hover:shadow-none hover:translate-y-0 hover:border-zinc-200/50",
-        isDragging &&
-          "shadow-2xl scale-[1.02] border-blue-500/50 dark:border-blue-500/50 z-50 ring-1 ring-blue-500/20 opacity-90 rotate-1",
+        isDragging && "opacity-30", // Dim the original item while dragging
+        isOverlay &&
+          "opacity-100 shadow-2xl scale-[1.02] border-blue-500/50 dark:border-blue-500/50 z-50 cursor-grabbing ring-1 ring-blue-500/20 rotate-1", // Overlay style
       )}
     >
       <div className="flex items-start justify-between w-full">
@@ -227,7 +230,10 @@ export function SortableTodoItem({
           <div
             {...attributes}
             {...listeners}
-            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-blue-500 transition-colors touch-none p-2 mt-0.5 -ml-2 sm:-ml-3 outline-none rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+            className={cn(
+              "flex-shrink-0 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-blue-500 transition-colors touch-none p-2 mt-0.5 -ml-2 sm:-ml-3 outline-none rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800",
+              isOverlay && "cursor-grabbing",
+            )}
           >
             <GripVertical className="w-5 h-5" />
           </div>
@@ -466,5 +472,34 @@ export function SortableTodoItem({
         />
       )}
     </motion.li>
+  );
+}
+
+export function SortableTodoItem(props: SortableTodoItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.todo.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 1,
+    position: "relative" as const,
+  };
+
+  return (
+    <TodoItem
+      {...props}
+      innerRef={setNodeRef}
+      style={style}
+      attributes={attributes}
+      listeners={listeners}
+      isDragging={isDragging}
+    />
   );
 }

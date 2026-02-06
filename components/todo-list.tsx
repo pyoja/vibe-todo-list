@@ -54,6 +54,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -61,9 +63,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+
 import { useSoundEffects } from "@/hooks/use-sound-effects";
-import { SortableTodoItem } from "@/components/sortable-todo-item";
+import { SortableTodoItem, TodoItem } from "@/components/sortable-todo-item";
 import { CalendarView } from "@/components/calendar-view";
 import { DayCompletionCard } from "@/components/day-completion-card";
 
@@ -110,6 +112,13 @@ export function TodoList({
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // DnD State
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string);
+  }
 
   // New Todo State
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
@@ -628,6 +637,7 @@ export function TodoList({
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
+    setActiveId(null);
 
     if (active.id !== over?.id) {
       const oldIndex = optimisticTodos.findIndex((t) => t.id === active.id);
@@ -1035,28 +1045,43 @@ export function TodoList({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        modifiers={[restrictToVerticalAxis]}
       >
-        <div className="space-y-3 pb-20">
-          {optimisticTodos.length === 0 ? (
-            <EmptyState
-              type="all-clear"
-              onAddClick={() => inputRef.current?.focus()}
-            />
-          ) : filteredTodos.length === 0 ? (
-            view === "calendar" ? (
-              <EmptyState type="date-empty" />
+        <div className="space-y-4 relative z-0">
+          {/* Calendar View */}
+          <AnimatePresence mode="wait">
+            {view === "calendar" ? (
+              <motion.div
+                key="calendar"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="w-full"
+              >
+                <CalendarView
+                  todos={filteredTodos}
+                  selectedDate={selectedDate}
+                  onSelectDate={(date) => {
+                    setSelectedDate(date);
+                    // if (date) setDueDate(date); // Optional: sync add form
+                  }}
+                />
+              </motion.div>
+            ) : filteredTodos.length === 0 ? (
+              <EmptyState />
             ) : (
-              <EmptyState type="no-results" />
-            )
-          ) : (
-            <SortableContext
-              items={filteredTodos.map((t) => t.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <ul className="grid gap-3">
-                <AnimatePresence initial={false} mode="popLayout">
+              <motion.div
+                key="list"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-3 pb-20"
+              >
+                <SortableContext
+                  items={filteredTodos.map((t) => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
                   {filteredTodos.map((todo) => (
                     <SortableTodoItem
                       key={todo.id}
@@ -1064,7 +1089,7 @@ export function TodoList({
                       folders={folders}
                       FOLDER_COLORS={FOLDER_COLORS}
                       onToggle={handleToggle}
-                      onUpdate={handleUpdateTodo} // by jh 20260205: Pass update handler
+                      onUpdate={handleUpdateTodo}
                       onDelete={handleDelete}
                       onPriorityChange={handlePriorityChange}
                       onFolderChange={handleFolderChange}
@@ -1073,11 +1098,30 @@ export function TodoList({
                       onDeleteSubTodo={handleDeleteSubTodo}
                     />
                   ))}
-                </AnimatePresence>
-              </ul>
-            </SortableContext>
-          )}
+                </SortableContext>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        <DragOverlay>
+          {activeId ? (
+            <TodoItem
+              todo={optimisticTodos.find((t) => t.id === activeId) as Todo}
+              folders={folders}
+              FOLDER_COLORS={FOLDER_COLORS}
+              onToggle={() => {}}
+              onUpdate={() => {}}
+              onDelete={() => {}}
+              onPriorityChange={() => {}}
+              onFolderChange={() => {}}
+              onAddSubTodo={async () => {}}
+              onToggleSubTodo={() => {}}
+              onDeleteSubTodo={() => {}}
+              isOverlay
+            />
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       <DayCompletionCard
