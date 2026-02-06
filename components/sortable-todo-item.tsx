@@ -55,7 +55,6 @@ interface SortableTodoItemProps {
     isCompleted: boolean,
   ) => void;
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
-  isDragActive?: boolean;
 }
 
 // Separate component to avoid "Cannot create components during render" error
@@ -126,7 +125,6 @@ export function TodoItem({
   isDragging,
   isOverlay,
   innerRef,
-  isDragActive,
 }: TodoItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -207,11 +205,7 @@ export function TodoItem({
     <motion.li
       ref={innerRef}
       style={style}
-      layoutId={isOverlay ? undefined : todo.id} // Disable layoutId in overlay to prevent conflicts
-      initial={isOverlay ? undefined : { opacity: 0, y: 10 }}
-      animate={isOverlay ? undefined : { opacity: 1, y: 0 }}
-      exit={isOverlay ? undefined : { opacity: 0, scale: 0.95 }}
-      layout={isDragActive || isOverlay ? false : true} // Disable layout animation if ANY item is being dragged globally, OR if this item is passing to overlay
+      // by jh 20260206: Removed layout, layoutId, initial, animate, exit to fix DnD conflicts with dnd-kit
       drag={isEditing || isOverlay ? false : "x"} // Disable swipe/drag in overlay
       dragConstraints={{ left: 0, right: 0 }} // Snap back
       dragElastic={0.2}
@@ -533,7 +527,6 @@ export function SortableTodoItem(props: SortableTodoItemProps) {
       attributes={attributes}
       listeners={listeners}
       isDragging={isDragging}
-      isDragActive={props.isDragActive}
     />
   );
 }

@@ -1104,8 +1104,6 @@ export function TodoList({
                       onAddSubTodo={handleAddSubTodo}
                       onToggleSubTodo={handleToggleSubTodo}
                       onDeleteSubTodo={handleDeleteSubTodo}
-                      // Pass global drag state
-                      isDragActive={!!activeId}
                     />
                   ))}
                 </SortableContext>
