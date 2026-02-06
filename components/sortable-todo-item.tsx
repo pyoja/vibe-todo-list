@@ -77,6 +77,7 @@ interface SortableTodoItemProps {
     isCompleted: boolean,
   ) => void;
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
+  onUpdateSubTodo: (todoId: string, subTodoId: string, content: string) => void;
 }
 
 // Separate component to avoid "Cannot create components during render" error
@@ -141,6 +142,7 @@ export function TodoItem({
   onAddSubTodo,
   onToggleSubTodo,
   onDeleteSubTodo,
+  onUpdateSubTodo,
   style,
   attributes,
   listeners,
@@ -535,6 +537,7 @@ export function TodoItem({
             onAdd={onAddSubTodo}
             onToggle={onToggleSubTodo}
             onDelete={onDeleteSubTodo}
+            onUpdate={onUpdateSubTodo}
           />
         )}
       </div>

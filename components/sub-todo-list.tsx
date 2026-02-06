@@ -1,10 +1,7 @@
-"use client";
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { type SubTodo } from "@/app/actions/subtodo";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, Plus, Trash2, GripVertical } from "lucide-react";
+import { Check, Plus, Trash2, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 
@@ -14,6 +11,7 @@ interface SubTodoListProps {
   onAdd: (todoId: string, content: string) => Promise<void>;
   onToggle: (todoId: string, subTodoId: string, isCompleted: boolean) => void;
   onDelete: (todoId: string, subTodoId: string) => void;
+  onUpdate: (todoId: string, subTodoId: string, content: string) => void;
 }
 
 export function SubTodoList({
@@ -22,10 +20,20 @@ export function SubTodoList({
   onAdd,
   onToggle,
   onDelete,
+  onUpdate,
 }: SubTodoListProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newSubTodoContent, setNewSubTodoContent] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingId && editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editingId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +47,13 @@ export function SubTodoList({
 
     await onAdd(todoId, content);
   }
+
+  const handleEditSubmit = (id: string) => {
+    if (editContent.trim()) {
+      onUpdate(todoId, id, editContent);
+    }
+    setEditingId(null);
+  };
 
   // Calculate progress
   const total = subTodos.length;
@@ -104,17 +119,55 @@ export function SubTodoList({
               />
             </button>
 
-            {/* Content */}
-            <span
-              className={cn(
-                "flex-1 break-all transition-colors",
-                subTodo.isCompleted
-                  ? "text-zinc-400 line-through decoration-zinc-300"
-                  : "text-zinc-700 dark:text-zinc-200",
-              )}
-            >
-              {subTodo.content}
-            </span>
+            {/* Content or Edit Input */}
+            {editingId === subTodo.id ? (
+              <form
+                className="flex-1"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleEditSubmit(subTodo.id);
+                }}
+              >
+                <Input
+                  ref={editInputRef}
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  onBlur={() => handleEditSubmit(subTodo.id)}
+                  className="h-6 text-sm py-0 px-1 rounded-sm border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setEditingId(null);
+                  }}
+                />
+              </form>
+            ) : (
+              <span
+                className={cn(
+                  "flex-1 break-all transition-colors cursor-text",
+                  subTodo.isCompleted
+                    ? "text-zinc-400 line-through decoration-zinc-300"
+                    : "text-zinc-700 dark:text-zinc-200",
+                )}
+                onDoubleClick={() => {
+                  setEditingId(subTodo.id);
+                  setEditContent(subTodo.content);
+                }}
+              >
+                {subTodo.content}
+              </span>
+            )}
+
+            {/* Edit Button */}
+            {editingId !== subTodo.id && (
+              <button
+                onClick={() => {
+                  setEditingId(subTodo.id);
+                  setEditContent(subTodo.content);
+                }}
+                className="opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-blue-500 transition-all"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            )}
 
             {/* Delete Button */}
             <button

@@ -93,3 +93,24 @@ export async function deleteSubTodo(id: string) {
     throw new Error("Failed to delete sub_todo");
   }
 }
+
+export async function updateSubTodo(
+  id: string,
+  todoId: string,
+  content: string,
+) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  try {
+    const res = await pool.query(
+      'UPDATE sub_todo SET content = $1 WHERE id = $2 AND "todoId" = $3 RETURNING *',
+      [content, id, todoId],
+    );
+    revalidatePath("/");
+    return res.rows[0];
+  } catch (error) {
+    console.error("Failed to update sub_todo:", error);
+    throw new Error("Failed to update sub_todo");
+  }
+}

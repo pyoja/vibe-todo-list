@@ -4,7 +4,7 @@ import { useState, useOptimistic, useMemo, startTransition } from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
-import { type SubTodo } from "@/app/actions/subtodo";
+import { type SubTodo, updateSubTodo } from "@/app/actions/subtodo";
 import { useTodoManager } from "@/hooks/use-todo-manager";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
 import { DayCompletionCard } from "@/components/day-completion-card";
@@ -72,7 +72,13 @@ type OptimisticAction =
       subTodoId: string;
       isCompleted: boolean;
     }
-  | { type: "deleteSubTodo"; todoId: string; subTodoId: string };
+  | { type: "deleteSubTodo"; todoId: string; subTodoId: string }
+  | {
+      type: "updateSubTodo";
+      todoId: string;
+      subTodoId: string;
+      content: string;
+    };
 
 export function TodoList({
   initialTodos,
@@ -180,6 +186,20 @@ export function TodoList({
                   ...t,
                   subTodos: (t.subTodos || []).filter(
                     (st) => st.id !== newTodo.subTodoId,
+                  ),
+                }
+              : t,
+          );
+        }
+        if (newTodo.type === "updateSubTodo") {
+          return state.map((t) =>
+            t.id === newTodo.todoId
+              ? {
+                  ...t,
+                  subTodos: (t.subTodos || []).map((st) =>
+                    st.id === newTodo.subTodoId
+                      ? { ...st, content: newTodo.content }
+                      : st,
                   ),
                 }
               : t,
@@ -540,6 +560,27 @@ export function TodoList({
     });
   };
 
+  const handleUpdateSubTodo = async (
+    todoId: string,
+    subTodoId: string,
+    content: string,
+  ) => {
+    startTransition(() => {
+      addOptimisticTodo({
+        type: "updateSubTodo",
+        todoId,
+        subTodoId,
+        content,
+      });
+    });
+    try {
+      await updateSubTodo(subTodoId, todoId, content);
+    } catch (e) {
+      console.error(e);
+      toast.error("업데이트 실패");
+    }
+  };
+
   // Folder Management Handlers
   const handleEditFolder = (folder: Folder) => {
     setEditingFolder(folder);
@@ -659,6 +700,7 @@ export function TodoList({
         onAddSubTodo={handleAddSubTodo}
         onToggleSubTodo={handleToggleSubTodo}
         onDeleteSubTodo={handleDeleteSubTodo}
+        onUpdateSubTodo={handleUpdateSubTodo}
       />
 
       <FolderDialogs

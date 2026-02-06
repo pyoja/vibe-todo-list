@@ -49,6 +49,7 @@ interface TodoListBodyProps {
     isCompleted: boolean,
   ) => void;
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
+  onUpdateSubTodo: (todoId: string, subTodoId: string, content: string) => void;
 }
 
 export function TodoListBody({
@@ -71,6 +72,7 @@ export function TodoListBody({
   onAddSubTodo,
   onToggleSubTodo,
   onDeleteSubTodo,
+  onUpdateSubTodo,
 }: TodoListBodyProps) {
   return (
     <>
@@ -143,6 +145,7 @@ export function TodoListBody({
                         onAddSubTodo={onAddSubTodo}
                         onToggleSubTodo={onToggleSubTodo}
                         onDeleteSubTodo={onDeleteSubTodo}
+                        onUpdateSubTodo={onUpdateSubTodo}
                       />
                     ))}
                   </div>
@@ -176,6 +179,7 @@ export function TodoListBody({
                       onAddSubTodo={onAddSubTodo}
                       onToggleSubTodo={onToggleSubTodo}
                       onDeleteSubTodo={onDeleteSubTodo}
+                      onUpdateSubTodo={onUpdateSubTodo}
                     />
                   ))}
                 </SortableContext>
@@ -198,6 +202,7 @@ export function TodoListBody({
               onAddSubTodo={async () => {}}
               onToggleSubTodo={() => {}}
               onDeleteSubTodo={() => {}}
+              onUpdateSubTodo={() => {}}
               isOverlay
             />
           ) : null}
