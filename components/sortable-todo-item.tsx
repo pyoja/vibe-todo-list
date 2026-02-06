@@ -219,44 +219,41 @@ export function TodoItem({
       whileDrag={{ scale: 1.02, zIndex: 100 }}
       className={cn(
         "group relative flex flex-col rounded-2xl transition-all duration-300 w-full max-w-full",
-        // Default Style
+        // Default Style (Not dragging, Not overlay)
         !isDragging &&
           !isOverlay &&
           "p-4 bg-white dark:bg-zinc-900/80 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm hover:shadow-lg hover:border-zinc-300/50 dark:hover:border-zinc-700 hover:-translate-y-0.5",
+
         // Completed Style
         todo.isCompleted &&
           !isDragging &&
           "bg-zinc-50/50 dark:bg-zinc-900/30 opacity-60 grayscale-[0.5] shadow-none hover:shadow-none hover:translate-y-0 hover:border-zinc-200/50",
-        // Dragging Placeholder Style (Drop Indicator)
+
+        // Dragging Placeholder Style (Ghost Card)
+        // We MUST maintain the original size for DnD physics to work correcty.
+        // We style it as a "slot" where the item will drop.
         isDragging &&
-          "opacity-100 bg-transparent border-none shadow-none items-center justify-center overflow-hidden",
-        // Overlay Style
+          !isOverlay &&
+          "opacity-100 p-4 bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-blue-400/50 shadow-inner",
+
+        // Overlay Style (The item following the cursor)
         isOverlay &&
-          "p-4 bg-white dark:bg-zinc-900 opacity-100 shadow-2xl scale-[1.02] border border-blue-500/50 dark:border-blue-500/50 z-50 cursor-grabbing ring-1 ring-blue-500/20 rotate-1",
+          "p-4 bg-white dark:bg-zinc-900 opacity-90 shadow-2xl scale-[1.02] border-2 border-blue-500 z-50 cursor-grabbing ring-4 ring-blue-500/10 rotate-1",
       )}
     >
-      {/* Drop Indicator Line (Only visible when dragging this specific item aka Placeholder) */}
+      {/* Drop Indicator (Center of the ghost card) */}
       {isDragging && !isOverlay && (
-        <div className="w-full flex items-center gap-2">
-          {/* Left Circle Indicator */}
-          <div className="w-2 h-2 rounded-full bg-blue-500 ring-4 ring-blue-500/20" />
-          {/* Main Line */}
-          <div className="h-0.5 flex-1 bg-gradient-to-r from-blue-500 to-transparent rounded-full" />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[90%] h-1 bg-blue-400/50 rounded-full" />
         </div>
       )}
 
-      {/* Content wrapper - Invisible but taking up space when dragging */}
+      {/* Content wrapper */}
       <div
         className={cn(
-          "w-full flex flex-col gap-2",
-          isDragging && !isOverlay && "opacity-0 h-0 overflow-hidden", // Completely hide content to collapse height, or keep opacity-0 to preserve?
-          /* 
-             User Request: "밑줄 위로 이동하겠구나 알지" (Know it will move above the line).
-             If we collapse height, the list shifts. Standard DnD keeps the whitespace.
-             But users often hate the big whitespace.
-             Let's try "Collapsing" the placeholder to a thin line.
-             This makes the list "close up" around the line.
-          */
+          "w-full flex flex-col gap-2 transition-opacity duration-200",
+          // Hide content in placeholder so we only see the "Ghost" slot
+          isDragging && !isOverlay ? "opacity-0" : "opacity-100",
         )}
       >
         <div className="flex items-start justify-between w-full">
