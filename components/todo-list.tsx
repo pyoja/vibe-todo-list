@@ -1050,6 +1050,7 @@ export function TodoList({
 
       {/* Todo List - DnD Context */}
       <DndContext
+        id="todo-dnd-context"
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
