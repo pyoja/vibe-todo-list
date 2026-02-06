@@ -30,12 +30,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { ListTree } from "lucide-react";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { ko } from "date-fns/locale";
 import type { Todo } from "@/app/actions/todo";
 import type { Folder } from "@/app/actions/folder";
 import { SubTodoList } from "@/components/sub-todo-list";
 import { useState, useRef, useEffect } from "react";
+
+// Helper functions
+const getDateColor = (date: Date) => {
+  if (isPast(date) && !isToday(date))
+    return "text-red-500 border-red-200 bg-red-50 dark:bg-red-900/20";
+  if (isToday(date))
+    return "text-orange-500 border-orange-200 bg-orange-50 dark:bg-orange-900/20";
+  if (isTomorrow(date))
+    return "text-blue-500 border-blue-200 bg-blue-50 dark:bg-blue-900/20";
+  return "text-zinc-500 border-zinc-200 bg-zinc-50 dark:bg-zinc-800";
+};
+
+const formatDate = (date: Date) => {
+  if (isToday(date)) return "오늘";
+  if (isTomorrow(date)) return "내일";
+  return format(date, "M/d (eee)", { locale: ko });
+};
 
 interface SortableTodoItemProps {
   todo: Todo;
@@ -155,22 +179,8 @@ export function TodoItem({
     }
   };
 
-  const getDueDateLabel = (date: Date) => {
-    if (isToday(date)) return "오늘까지";
-    if (isTomorrow(date)) return "내일까지";
-    return format(date, "M월 d일까지", { locale: ko });
-  };
-
-  const getDueDateColor = (date: Date, isCompleted: boolean) => {
-    if (isCompleted) return "text-zinc-400";
-    if (isPast(date) && !isToday(date)) return "text-red-500 font-medium";
-    if (isToday(date)) return "text-amber-500 font-medium";
-    return "text-zinc-500 dark:text-zinc-400";
-  };
-
   // Calculate Subtask Progress
   const subTodos = todo.subTodos || [];
-  const completedSubTodos = subTodos.filter((st) => st.isCompleted).length;
   const hasSubTodos = subTodos.length > 0;
 
   return (
@@ -309,19 +319,56 @@ export function TodoItem({
 
               {/* Meta Tags */}
               <div className="flex flex-wrap items-center gap-2">
-                {/* Subtask Badge */}
+                {/* Date Badge (Clickable) */}
+                {todo.dueDate && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+                          getDateColor(new Date(todo.dueDate)),
+                        )}
+                      >
+                        <CalendarIcon className="w-3 h-3 mr-1" />
+                        {formatDate(new Date(todo.dueDate))}
+                      </Badge>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={new Date(todo.dueDate)}
+                        onSelect={(date) => {
+                          // Date | undefined
+                          // If undefined (deselected), we can either remove the date or ignore.
+                          // Let's assume we update it.
+                          onUpdate(todo.id, { dueDate: date ?? null });
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+
+                {/* Subtask Badge (Toggle) */}
                 {hasSubTodos && (
-                  <div className="flex items-center gap-1.5 text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500 font-medium">
-                    <span
-                      className={cn(
-                        completedSubTodos === subTodos.length
-                          ? "text-green-500"
-                          : "",
-                      )}
-                    >
-                      {completedSubTodos}/{subTodos.length}
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors gap-1",
+                      isExpanded
+                        ? "bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                        : "text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800",
+                    )}
+                    onClick={() => setIsExpanded(!isExpanded)}
+                  >
+                    <ListTree className="w-3 h-3" />
+                    <span>
+                      {todo.subTodos?.filter((st) => st.isCompleted).length ||
+                        0}
+                      /{todo.subTodos?.length || 0}
                     </span>
-                  </div>
+                  </Badge>
                 )}
 
                 {/* Priority */}
@@ -371,19 +418,6 @@ export function TodoItem({
                   </DropdownMenu>
                 ) : null}
 
-                {/* Due Date */}
-                {todo.dueDate && (
-                  <div
-                    className={cn(
-                      "flex items-center gap-1 text-xs",
-                      getDueDateColor(new Date(todo.dueDate), todo.isCompleted),
-                    )}
-                  >
-                    <CalendarIcon className="w-3 h-3" />
-                    <span>{getDueDateLabel(new Date(todo.dueDate))}</span>
-                  </div>
-                )}
-
                 {/* Tags */}
                 {todo.tags && todo.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -402,22 +436,16 @@ export function TodoItem({
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Actions Area */}
           <div className="mt-0 flex items-center justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+            {/* Folder Selection - Hidden on Mobile, shown on hover/desktop */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-md transition-colors"
-                  title="메뉴"
-                >
+                <button className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                   <FolderIcon className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                  <span>수정</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+              <DropdownMenuContent align="end" className="w-48">
                 <FolderMenuContent
                   todoId={todo.id}
                   folders={folders}

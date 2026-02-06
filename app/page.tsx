@@ -7,8 +7,13 @@ import { getTodos } from "@/app/actions/todo";
 import { LandingPage } from "@/components/landing-page";
 import { UserProfile } from "@/components/user-profile";
 // by jh 20260206: Removed Sidebar, kept MobileSidebar for mobile menu
-import { MobileSidebar } from "@/components/sidebar";
 import { getFolders } from "@/app/actions/folder";
+import dynamic from "next/dynamic";
+
+const MobileSidebar = dynamic(
+  () => import("@/components/sidebar").then((mod) => mod.MobileSidebar),
+  { ssr: false },
+);
 
 export default async function Page({
   searchParams,
