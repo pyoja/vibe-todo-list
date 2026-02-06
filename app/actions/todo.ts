@@ -59,9 +59,9 @@ export async function getTodos(folderId?: string): Promise<Todo[]> {
       params.push(folderId);
     }
 
-    // 정렬: 완료 여부(미완료 우선) -> 사용자 지정 순서(order) -> 생성일(최신순)
-    // order 컬럼이 새로 추가되었으므로 0일 수 있음.
-    query += ' ORDER BY t."isCompleted" ASC, t."order" ASC, t."createdAt" DESC';
+    // 정렬: 사용자 지정 순서(order) -> 생성일(최신순)
+    // by jh 20260206: 완료된 항목이 맨 아래로 내려가지 않도록 isCompleted 정렬 제거
+    query += ' ORDER BY t."order" ASC, t."createdAt" DESC';
 
     const res = await pool.query(query, params);
     return res.rows;
