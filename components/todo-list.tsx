@@ -673,13 +673,11 @@ export function TodoList({
   return (
     <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Dashboard Header */}
-      <div className="flex justify-between items-start mb-6">
-        <DashboardHeader
-          userName={user?.name || "게스트"}
-          totalTodos={optimisticTodos.length}
-          completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
-        />
-      </div>
+      <DashboardHeader
+        userName={user?.name || "게스트"}
+        totalTodos={optimisticTodos.length}
+        completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
+      />
 
       {/* Control Bar (Search & Filter & View Toggle) */}
       <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl p-2 shadow-sm border border-zinc-200/50 dark:border-zinc-800/50 transition-all flex flex-col sm:flex-row gap-2">
