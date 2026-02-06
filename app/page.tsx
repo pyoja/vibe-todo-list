@@ -21,10 +21,7 @@ export default async function Page({
   });
 
   if (session) {
-    const [todos, folders] = await Promise.all([
-      getTodos(params?.folderId),
-      getFolders(),
-    ]);
+    const [todos, folders] = await Promise.all([getTodos(), getFolders()]);
 
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-black selection:bg-blue-100 dark:selection:bg-blue-900 overflow-x-hidden">

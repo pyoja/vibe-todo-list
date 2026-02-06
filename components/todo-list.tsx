@@ -223,6 +223,13 @@ export function TodoList({
       }
       if (filter === "active" && todo.isCompleted) return false;
       if (filter === "completed" && !todo.isCompleted) return false;
+
+      // Filter by Folder
+      // If folderId is provided (from props/URL), only show todos in that folder.
+      if (folderId && todo.folderId !== folderId) {
+        return false;
+      }
+
       return true;
     });
 
@@ -263,6 +270,7 @@ export function TodoList({
     filter,
     view,
     selectedDate,
+    folderId,
   ]);
 
   const sensors = useSensors(
