@@ -22,7 +22,6 @@ import {
 import { cn } from "@/lib/utils";
 import { type Folder } from "@/app/actions/folder";
 import { type Todo } from "@/app/actions/todo";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface FolderSectionProps {
   folders: Folder[];
@@ -124,141 +123,136 @@ export function FolderSection({
 
   return (
     <div className="mb-6 space-y-2">
-      <motion.div
-        layout
-        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3"
-      >
-        <AnimatePresence>
-          {visibleItems.map((item) => {
-            if (item.type === "all") {
-              return (
-                <Link
-                  key="all"
-                  href="/"
-                  className={cn(
-                    "relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5",
-                    !folderId
-                      ? "bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 border-blue-200 dark:border-blue-800 shadow-sm"
-                      : "bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                      !folderId
-                        ? "bg-blue-500 text-white shadow-blue-200 dark:shadow-none shadow-lg"
-                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400",
-                    )}
-                  >
-                    <LayoutGrid className="w-5 h-5" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                      전체
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                      {initialTodos.length}개
-                    </p>
-                  </div>
-                </Link>
-              );
-            }
-
-            if (item.type === "new") {
-              return (
-                <button
-                  key="new"
-                  onClick={onNewFolderClick}
-                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all group"
-                >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 transition-colors">
-                    <FolderPlus className="w-5 h-5" />
-                  </div>
-                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                    새 폴더
-                  </p>
-                </button>
-              );
-            }
-
-            // Normal Folder
-            const folder = item as Folder & { type: string };
-            const folderTodoCount = initialTodos.filter(
-              (t) => t.folderId === folder.id,
-            ).length;
-            const isSelected = folderId === folder.id;
-            const styles = getFolderColors(folder.color, isSelected);
-
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {visibleItems.map((item) => {
+          if (item.type === "all") {
             return (
-              <div key={folder.id} className="relative group">
-                <Link
-                  href={`/?folderId=${folder.id}`}
+              <Link
+                key="all"
+                href="/"
+                className={cn(
+                  "relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5",
+                  !folderId
+                    ? "bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 border-blue-200 dark:border-blue-800 shadow-sm"
+                    : "bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800",
+                )}
+              >
+                <div
                   className={cn(
-                    "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5 min-h-[110px] justify-between",
-                    styles.container,
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                    !folderId
+                      ? "bg-blue-500 text-white shadow-blue-200 dark:shadow-none shadow-lg"
+                      : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400",
                   )}
                 >
-                  <div
+                  <LayoutGrid className="w-5 h-5" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    전체
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                    {initialTodos.length}개
+                  </p>
+                </div>
+              </Link>
+            );
+          }
+
+          if (item.type === "new") {
+            return (
+              <button
+                key="new"
+                onClick={onNewFolderClick}
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all group"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-400 group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700 transition-colors">
+                  <FolderPlus className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                  새 폴더
+                </p>
+              </button>
+            );
+          }
+
+          // Normal Folder
+          const folder = item as Folder & { type: string };
+          const folderTodoCount = initialTodos.filter(
+            (t) => t.folderId === folder.id,
+          ).length;
+          const isSelected = folderId === folder.id;
+          const styles = getFolderColors(folder.color, isSelected);
+
+          return (
+            <div key={folder.id} className="relative group">
+              <Link
+                href={`/?folderId=${folder.id}`}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5 min-h-[110px] justify-between",
+                  styles.container,
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                    styles.iconBg,
+                  )}
+                >
+                  <FolderIcon
                     className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                      styles.iconBg,
+                      "w-5 h-5",
+                      isSelected ? styles.iconText : styles.iconText,
+                    )}
+                  />
+                </div>
+                <div className="text-center w-full">
+                  <p
+                    className={cn(
+                      "text-sm font-semibold truncate w-full px-2",
+                      styles.text,
                     )}
                   >
-                    <FolderIcon
-                      className={cn(
-                        "w-5 h-5",
-                        isSelected ? styles.iconText : styles.iconText,
-                      )}
-                    />
-                  </div>
-                  <div className="text-center w-full">
-                    <p
-                      className={cn(
-                        "text-sm font-semibold truncate w-full px-2",
-                        styles.text,
-                      )}
-                    >
-                      {folder.name}
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium opacity-80">
-                      {folderTodoCount}개
-                    </p>
-                  </div>
-                </Link>
-
-                {/* Folder Menu */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 hover:bg-black/5 dark:hover:bg-white/10 rounded-full"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        <MoreVertical className="w-4 h-4 text-zinc-500" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onEditFolder(folder)}>
-                        <Pencil className="w-4 h-4 mr-2" />
-                        이름 변경
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onDeleteFolder(folder.id)}
-                        className="text-red-600 dark:text-red-400"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        삭제
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    {folder.name}
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium opacity-80">
+                    {folderTodoCount}개
+                  </p>
                 </div>
+              </Link>
+
+              {/* Folder Menu */}
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 hover:bg-black/5 dark:hover:bg-white/10 rounded-full"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <MoreVertical className="w-4 h-4 text-zinc-500" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEditFolder(folder)}>
+                      <Pencil className="w-4 h-4 mr-2" />
+                      이름 변경
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDeleteFolder(folder.id)}
+                      className="text-red-600 dark:text-red-400"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      삭제
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            );
-          })}
-        </AnimatePresence>
-      </motion.div>
+            </div>
+          );
+        })}
+      </div>
 
       {shouldShowExpandButton && (
         <div className="flex justify-center">

@@ -197,7 +197,7 @@ export function TodoInput({
                   {selectedFolderId === "inbox" ? (
                     <>
                       <Inbox className="w-3.5 h-3.5 mr-1.5" />
-                      보관함
+                      폴더
                     </>
                   ) : (
                     <>
@@ -223,7 +223,7 @@ export function TodoInput({
                         }}
                       >
                         <Inbox className="mr-2 h-4 w-4" />
-                        <span>보관함 (미지정)</span>
+                        <span>폴더 (미지정)</span>
                         {selectedFolderId === "inbox" && (
                           <Check className="ml-auto h-4 w-4" />
                         )}
