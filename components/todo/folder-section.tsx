@@ -124,7 +124,11 @@ export function FolderSection({
   return (
     <div className="mb-6 space-y-2">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {visibleItems.map((item) => {
+        {visibleItems.map((item, index) => {
+          // Mobile: Hide items beyond index 3 (4 items total) if not expanded
+          // Desktop: Show all items in visibleItems
+          const isHiddenOnMobile = !isExpanded && index >= 4;
+
           if (item.type === "all") {
             return (
               <Link
@@ -135,6 +139,7 @@ export function FolderSection({
                   !folderId
                     ? "bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 border-blue-200 dark:border-blue-800 shadow-sm"
                     : "bg-white dark:bg-zinc-900/80 border-zinc-200 dark:border-zinc-800",
+                  isHiddenOnMobile && "hidden md:flex",
                 )}
               >
                 <div

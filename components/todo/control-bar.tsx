@@ -1,6 +1,11 @@
-"use client";
-
-import { Search, X, LayoutList, CalendarDays } from "lucide-react";
+import { useState } from "react";
+import {
+  Search,
+  X,
+  LayoutList,
+  CalendarDays,
+  SlidersHorizontal,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ControlBarProps {
   searchTerm: string;
@@ -43,27 +49,57 @@ export function ControlBar({
   filter,
   setFilter,
 }: ControlBarProps) {
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
   return (
-    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl p-2 shadow-sm border border-zinc-200/50 dark:border-zinc-800/50 transition-all flex flex-col sm:flex-row gap-2">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
-        <Input
-          placeholder="무엇을 찾고 계신가요?"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-9 h-9 bg-zinc-50 dark:bg-zinc-800 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400"
-        />
-        {searchTerm && (
-          <button
-            onClick={() => setSearchTerm("")}
-            className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
+    <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md rounded-2xl p-2 shadow-sm border border-zinc-200/50 dark:border-zinc-800/50 transition-all flex flex-col gap-2">
+      {/* Top Row: Search + Mobile Toggle */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+          <Input
+            placeholder="무엇을 찾고 계신가요?"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9 bg-zinc-50 dark:bg-zinc-800 border-0 focus-visible:ring-1 focus-visible:ring-blue-500 transition-all font-medium text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Mobile: Filter Toggle Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "sm:hidden h-9 w-9 shrink-0 transition-colors",
+            isFiltersOpen
+              ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+              : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800",
+          )}
+          onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+        </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Filters Row (Collapsible on mobile, visible on desktop) */}
+      {/* Note: using default 'hidden' for mobile, 'flex' for desktop. And toggle override. */}
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-2",
+          // Mobile logic: hidden by default unless open
+          !isFiltersOpen && "hidden",
+          // Desktop logic: always flex
+          "sm:flex",
+        )}
+      >
         <Select
           value={priorityFilter}
           onValueChange={(value) =>
