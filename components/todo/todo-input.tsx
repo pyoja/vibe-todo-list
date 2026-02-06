@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Plus, Loader2, Calendar as CalendarIcon, Repeat } from "lucide-react";
+import {
+  Plus,
+  Loader2,
+  Calendar as CalendarIcon,
+  Repeat,
+  Folder as FolderIcon,
+  Inbox,
+  Check,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +25,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import { type Folder } from "@/app/actions/folder";
 
 export interface TodoInputMeta {
   priority: "low" | "medium" | "high";
@@ -29,6 +46,7 @@ export interface TodoInputMeta {
     pattern: "daily" | "weekly" | "monthly" | null;
     interval: number;
   };
+  folderId?: string | null;
 }
 
 interface TodoInputProps {
@@ -37,6 +55,8 @@ interface TodoInputProps {
   view: "list" | "calendar";
   selectedDate?: Date;
   defaultPriority?: "low" | "medium" | "high";
+  folders: Folder[];
+  defaultFolderId?: string;
 }
 
 export function TodoInput({
@@ -45,6 +65,8 @@ export function TodoInput({
   view,
   selectedDate,
   defaultPriority = "medium",
+  folders,
+  defaultFolderId,
 }: TodoInputProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +80,21 @@ export function TodoInput({
     pattern: "daily" | "weekly" | "monthly" | null;
     interval: number;
   }>({ isRecurring: false, pattern: null, interval: 1 });
+
+  const [selectedFolderId, setSelectedFolderId] = useState<
+    string | "inbox" | null
+  >(defaultFolderId || "inbox");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
+
+  // Update selected folder when prop changes (navigation)
+  useEffect(() => {
+    const newFolderId = defaultFolderId || "inbox";
+    if (selectedFolderId !== newFolderId) {
+      setSelectedFolderId(newFolderId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultFolderId]);
 
   // Global Shortcut: Ctrl + N to focus
   useEffect(() => {
@@ -74,14 +110,27 @@ export function TodoInput({
 
   const handleSubmit = (formData: FormData) => {
     // Pass local state as metadata to parent
-    onAdd(formData, { priority, dueDate, recurrence });
+    onAdd(formData, {
+      priority,
+      dueDate,
+      recurrence,
+      folderId: selectedFolderId === "inbox" ? null : selectedFolderId,
+    });
 
-    // Reset local state
+    // Reset local state (partially - keep folder selection?)
+    // Decision: Keep folder selection as is for consecutive adds, or reset?
+    // Let's reset to defaultFolderId (current view)
     setPriority("medium");
     setDueDate(undefined);
     setRecurrence({ isRecurring: false, pattern: null, interval: 1 });
+    // Don't reset folder here to let user add multiple items to same folder?
+    // Usually standard behavior is to stay or reset. Let's reset to current context.
+    setSelectedFolderId(defaultFolderId || "inbox");
+
     formRef.current?.reset();
   };
+
+  const selectedFolder = folders.find((f) => f.id === selectedFolderId);
 
   return (
     <div className="relative group z-10">
@@ -131,6 +180,77 @@ export function TodoInput({
                 <SelectItem value="high">높음</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Folder Selection Popover */}
+            <Popover open={isFolderOpen} onOpenChange={setIsFolderOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+                    selectedFolderId !== "inbox" &&
+                      "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+                  )}
+                >
+                  {selectedFolderId === "inbox" ? (
+                    <>
+                      <Inbox className="w-3.5 h-3.5 mr-1.5" />
+                      보관함
+                    </>
+                  ) : (
+                    <>
+                      <FolderIcon className="w-3.5 h-3.5 mr-1.5" />
+                      <span className="truncate max-w-[80px]">
+                        {selectedFolder?.name}
+                      </span>
+                    </>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="폴더 검색..." />
+                  <CommandList>
+                    <CommandEmpty>폴더가 없습니다.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandItem
+                        value="inbox"
+                        onSelect={() => {
+                          setSelectedFolderId("inbox");
+                          setIsFolderOpen(false);
+                        }}
+                      >
+                        <Inbox className="mr-2 h-4 w-4" />
+                        <span>보관함 (미지정)</span>
+                        {selectedFolderId === "inbox" && (
+                          <Check className="ml-auto h-4 w-4" />
+                        )}
+                      </CommandItem>
+                      {folders.map((folder) => (
+                        <CommandItem
+                          key={folder.id}
+                          value={folder.name}
+                          onSelect={() => {
+                            setSelectedFolderId(folder.id);
+                            setIsFolderOpen(false);
+                          }}
+                        >
+                          <FolderIcon
+                            className={`mr-2 h-4 w-4 text-${folder.color}`}
+                          />
+                          <span>{folder.name}</span>
+                          {selectedFolderId === folder.id && (
+                            <Check className="ml-auto h-4 w-4" />
+                          )}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
 
             {/* Date Picker */}
             {view !== "calendar" && (

@@ -320,6 +320,11 @@ export function TodoList({
     const { content: parsedContent, dueDate: parsedDueDate } =
       parseDateFromContent(contentWithoutTags || rawContent);
 
+    // Determine folder ID: explicitly provided in meta > current view folderId > null (inbox)
+    // Note: meta.folderId can be null (meaning Inbox explicitly selected)
+    const targetFolderId =
+      meta.folderId !== undefined ? meta.folderId : folderId || null;
+
     const tempId = crypto.randomUUID();
     const newTodo: Todo = {
       id: tempId,
@@ -327,7 +332,7 @@ export function TodoList({
       isCompleted: false,
       createdAt: new Date(),
       userId: user?.id || "guest",
-      folderId: folderId || null,
+      folderId: targetFolderId,
       priority: meta.priority,
       dueDate: parsedDueDate || (meta.dueDate ? new Date(meta.dueDate) : null),
       order: Date.now(),
@@ -622,6 +627,8 @@ export function TodoList({
         isPending={isPending}
         view={view}
         selectedDate={selectedDate}
+        folders={folders}
+        defaultFolderId={folderId}
       />
 
       <TodoListBody

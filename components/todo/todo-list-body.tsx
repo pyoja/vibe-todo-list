@@ -22,7 +22,6 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
-import { type SubTodo } from "@/app/actions/subtodo";
 
 interface TodoListBodyProps {
   view: "list" | "calendar";
@@ -43,7 +42,7 @@ interface TodoListBodyProps {
   onDelete: (id: string) => void;
   onPriorityChange: (id: string, priority: "low" | "medium" | "high") => void;
   onFolderChange: (id: string, folderId: string | null) => void;
-  onAddSubTodo: (todoId: string, content: string) => void;
+  onAddSubTodo: (todoId: string, content: string) => Promise<void>;
   onToggleSubTodo: (
     todoId: string,
     subTodoId: string,
