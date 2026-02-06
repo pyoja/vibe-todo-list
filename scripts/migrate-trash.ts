@@ -45,10 +45,10 @@ async function migrate() {
         IF NOT EXISTS (
           SELECT 1
           FROM information_schema.columns
-          WHERE table_name = 'subtodos'
+          WHERE table_name = 'sub_todo'
           AND column_name = 'deleted_at'
         ) THEN
-           ALTER TABLE subtodos ADD COLUMN "deleted_at" TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+           ALTER TABLE sub_todo ADD COLUMN "deleted_at" TIMESTAMP WITH TIME ZONE DEFAULT NULL;
         END IF;
       END $$;
     `);

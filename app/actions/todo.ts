@@ -48,8 +48,7 @@ export async function getTodos(folderId?: string): Promise<Todo[]> {
       ) as "subTodos"
       FROM todo t
       LEFT JOIN folder f ON t."folderId" = f.id
-      FROM todo t
-      LEFT JOIN folder f ON t."folderId" = f.id
+
       WHERE t."userId" = $1 AND t."deleted_at" IS NULL
     `;
     // by jh 20260202: 폴더 정보 Join 및 타입 안정성 확보
