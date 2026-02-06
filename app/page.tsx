@@ -8,12 +8,7 @@ import { LandingPage } from "@/components/landing-page";
 import { UserProfile } from "@/components/user-profile";
 // by jh 20260206: Removed Sidebar, kept MobileSidebar for mobile menu
 import { getFolders } from "@/app/actions/folder";
-import dynamic from "next/dynamic";
-
-const MobileSidebar = dynamic(
-  () => import("@/components/sidebar").then((mod) => mod.MobileSidebar),
-  { ssr: false },
-);
+import { MobileSidebarClient } from "@/components/mobile-sidebar-client";
 
 export default async function Page({
   searchParams,
@@ -32,7 +27,7 @@ export default async function Page({
       <div className="min-h-screen bg-slate-50 dark:bg-black selection:bg-blue-100 dark:selection:bg-blue-900 overflow-x-hidden">
         <header className="px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-xl sticky top-0 z-50">
           <div className="flex items-center gap-3 font-bold text-xl tracking-tight">
-            <MobileSidebar initialFolders={folders} />
+            <MobileSidebarClient initialFolders={folders} />
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
                 <Puzzle className="w-5 h-5" />

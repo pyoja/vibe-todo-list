@@ -54,7 +54,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface SidebarProps {
+export interface SidebarProps {
   initialFolders: Folder[];
   className?: string;
 }
