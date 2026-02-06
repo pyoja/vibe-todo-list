@@ -73,12 +73,12 @@ export function ControlBar({
           )}
         </div>
 
-        {/* Mobile: Filter Toggle Button */}
+        {/* Filter Toggle Button */}
         <Button
           variant="ghost"
           size="icon"
           className={cn(
-            "sm:hidden h-9 w-9 shrink-0 transition-colors",
+            "h-9 w-9 shrink-0 transition-colors",
             isFiltersOpen
               ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
               : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800",
@@ -89,15 +89,11 @@ export function ControlBar({
         </Button>
       </div>
 
-      {/* Filters Row (Collapsible on mobile, visible on desktop) */}
-      {/* Note: using default 'hidden' for mobile, 'flex' for desktop. And toggle override. */}
+      {/* Filters Row (Collapsible) */}
       <div
         className={cn(
           "flex flex-wrap items-center gap-2",
-          // Mobile logic: hidden by default unless open
           !isFiltersOpen && "hidden",
-          // Desktop logic: always flex
-          "sm:flex",
         )}
       >
         <Select
