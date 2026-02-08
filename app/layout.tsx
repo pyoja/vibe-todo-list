@@ -35,6 +35,9 @@ export const metadata = {
     title: "하루조각 - 당신의 하루를 정리하세요",
     description: "복잡한 일상을 심플하게 관리하는 투두 리스트",
   },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export const viewport = {
