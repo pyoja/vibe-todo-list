@@ -12,6 +12,7 @@ import {
   GripVertical,
   Plus,
   MoreVertical,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -22,14 +23,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   Popover,
   PopoverContent,
@@ -417,145 +415,122 @@ export function TodoItem({
 
           {/* Actions Area */}
           <div className="mt-0 flex items-center justify-end gap-1">
-            {/* Mobile: More Menu (Dropdown) */}
-            <div className="md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>작업</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsExpanded(true);
-                      setIsAddingSubTask(true);
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    하위 항목 추가
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>폴더 이동</DropdownMenuLabel>
-                  <FolderMenuContent
-                    todoId={todo.id}
-                    folders={folders}
-                    FOLDER_COLORS={FOLDER_COLORS}
-                    onFolderChange={onFolderChange}
-                  />
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>우선순위</DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() => onPriorityChange(todo.id, "low")}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-slate-400 mr-2" />
-                    낮음
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onPriorityChange(todo.id, "medium")}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
-                    보통
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onPriorityChange(todo.id, "high")}
-                  >
-                    <div className="w-2 h-2 rounded-full bg-red-500 mr-2" />
-                    높음
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => onDelete(todo.id)}
-                    className="text-red-600 dark:text-red-400"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    삭제
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>작업</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  수정
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(true);
+                    setIsAddingSubTask(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  하위 항목 추가
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
 
-            {/* Desktop: Individual Action Buttons */}
-            <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-              {/* Add Subtask Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(true);
-                  setIsAddingSubTask(true);
-                }}
-                className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                title="하위 항목 추가"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+                {/* Date Sub-menu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    마감일 설정
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="p-0">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        todo.dueDate ? new Date(todo.dueDate) : undefined
+                      }
+                      onSelect={(date) => {
+                        onUpdate(todo.id, { dueDate: date ?? null });
+                        // Optional: Close menu? The Calendar interaction might not bubble up as a menu item click.
+                      }}
+                      initialFocus
+                    />
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
 
-              {/* Calendar Selection */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-2 text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    title="날짜 설정"
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={todo.dueDate ? new Date(todo.dueDate) : undefined}
-                    onSelect={(date) => {
-                      onUpdate(todo.id, { dueDate: date ?? null });
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+                {/* Folder Sub-menu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <FolderIcon className="w-4 h-4 mr-2" />
+                    폴더 이동
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <FolderMenuContent
+                      todoId={todo.id}
+                      folders={folders}
+                      FOLDER_COLORS={FOLDER_COLORS}
+                      onFolderChange={onFolderChange}
+                    />
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
 
-              {/* Folder Selection */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                    <FolderIcon className="w-4 h-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <FolderMenuContent
-                    todoId={todo.id}
-                    folders={folders}
-                    FOLDER_COLORS={FOLDER_COLORS}
-                    onFolderChange={onFolderChange}
-                  />
-                </DropdownMenuContent>
-              </DropdownMenu>
+                {/* Priority Sub-menu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center">
+                      <div
+                        className={cn(
+                          "w-2 h-2 rounded-full",
+                          todo.priority === "high"
+                            ? "bg-red-500"
+                            : todo.priority === "medium"
+                              ? "bg-blue-500"
+                              : "bg-slate-400",
+                        )}
+                      />
+                    </div>
+                    우선순위
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem
+                      onClick={() => onPriorityChange(todo.id, "low")}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-slate-400 mr-2" />
+                      낮음
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onPriorityChange(todo.id, "medium")}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                      보통
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onPriorityChange(todo.id, "high")}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-red-500 mr-2" />
+                      높음
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
 
-              <Select
-                value={todo.priority || "medium"}
-                onValueChange={(val: string) =>
-                  onPriorityChange(todo.id, val as "low" | "medium" | "high")
-                }
-              >
-                <SelectTrigger className="h-7 text-[10px] w-auto border-transparent bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 focus:ring-0 px-2 rounded-md">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">낮음</SelectItem>
-                  <SelectItem value="medium">보통</SelectItem>
-                  <SelectItem value="high">높음</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <button
-                onClick={() => onDelete(todo.id)}
-                className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onDelete(todo.id)}
+                  className="text-red-600 dark:text-red-400"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  삭제
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
