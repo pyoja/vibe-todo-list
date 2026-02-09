@@ -115,7 +115,7 @@ export function SubTodoList({
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   onBlur={() => handleEditSubmit(subTodo.id)}
-                  className="h-6 text-sm py-0 px-1 rounded-sm border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900"
+                  className="h-6 text-sm py-0 px-1 rounded-sm border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"
                   onKeyDown={(e) => {
                     if (e.key === "Escape") setEditingId(null);
                   }}

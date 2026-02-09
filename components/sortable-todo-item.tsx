@@ -554,7 +554,7 @@ export function TodoItem({
               <input
                 name="content"
                 autoFocus
-                className="flex-1 bg-transparent border-none text-sm focus:ring-0 placeholder:text-zinc-400 outline-none"
+                className="flex-1 bg-transparent border-none text-sm focus:ring-0 placeholder:text-zinc-400 outline-none text-zinc-900 dark:text-zinc-100"
                 placeholder="하위 항목 입력..."
                 onBlur={() => {
                   setTimeout(() => setIsAddingSubTask(false), 100);

@@ -104,7 +104,6 @@ const STATIC_TODOS: DemoTodo[] = [
     // dueDate: set in useEffect
     folderName: "업무",
     folderColor: "blue-500",
-    tags: ["회의", "발표"],
   },
   {
     id: "2",
@@ -113,7 +112,6 @@ const STATIC_TODOS: DemoTodo[] = [
     priority: "medium",
     folderName: "개인",
     folderColor: "green-500",
-    tags: ["쇼핑", "건강"],
   },
   {
     id: "3",
@@ -132,6 +130,15 @@ const MOCK_FOLDERS = [
   { id: "health", name: "운동", color: "orange-500" },
 ];
 
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+
 export function InteractiveDemo() {
   const [todos, setTodos] = useState<DemoTodo[]>(STATIC_TODOS);
   const [isClient, setIsClient] = useState(false);
@@ -140,6 +147,7 @@ export function InteractiveDemo() {
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
 
   const [playPop] = useSound(
     "https://pub-3626123a908346b095493b827f311c82.r2.dev/pop_c0c.mp3",
@@ -269,7 +277,10 @@ export function InteractiveDemo() {
                 value={priority}
                 onValueChange={(v: "low" | "medium" | "high") => setPriority(v)}
               >
-                <SelectTrigger className="h-8 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200">
+                <SelectTrigger
+                  type="button"
+                  className="h-8 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200"
+                >
                   <div
                     className={cn(
                       "w-2 h-2 rounded-full",
@@ -289,53 +300,83 @@ export function InteractiveDemo() {
                 </SelectContent>
               </Select>
 
-              {/* Folder Selector */}
-              <Select
-                value={selectedFolderId || "inbox"}
-                onValueChange={(v) =>
-                  setSelectedFolderId(v === "inbox" ? null : v)
-                }
-              >
-                <SelectTrigger
-                  className={cn(
-                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors border-transparent focus:ring-0 text-zinc-600 dark:text-zinc-300",
-                    selectedFolderId &&
-                      "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
-                  )}
-                >
-                  {selectedFolderId ? (
-                    <>
-                      <FolderIcon className="w-3.5 h-3.5 mr-1.5" />
-                      <span className="truncate max-w-[80px]">
-                        {selectedFolder?.name}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Inbox className="w-3.5 h-3.5 mr-1.5" />
-                      폴더
-                    </>
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inbox">
-                    <div className="flex items-center">
-                      <Inbox className="mr-2 h-4 w-4" />
-                      미지정
-                    </div>
-                  </SelectItem>
-                  {MOCK_FOLDERS.map((folder) => (
-                    <SelectItem key={folder.id} value={folder.id}>
+              {/* Folder Selection Popover */}
+              <Popover open={isFolderOpen} onOpenChange={setIsFolderOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors border-transparent focus:ring-0 text-zinc-600 dark:text-zinc-300 w-auto min-w-[80px]",
+                      selectedFolderId &&
+                        "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+                    )}
+                  >
+                    {selectedFolderId ? (
                       <div className="flex items-center">
-                        <FolderIcon
-                          className={`mr-2 h-4 w-4 text-${folder.color}`}
-                        />
-                        {folder.name}
+                        <FolderIcon className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                        <span className="truncate max-w-[80px]">
+                          {selectedFolder?.name}
+                        </span>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    ) : (
+                      <div className="flex items-center">
+                        <Inbox className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+                        폴더
+                      </div>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="폴더 검색..." />
+                    <CommandList>
+                      <CommandEmpty>폴더가 없습니다.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="inbox"
+                          onSelect={() => {
+                            setSelectedFolderId(null);
+                            setIsFolderOpen(false);
+                          }}
+                        >
+                          <Inbox className="mr-2 h-4 w-4" />
+                          <span>폴더 (미지정)</span>
+                          {!selectedFolderId && (
+                            <Check className="ml-auto h-4 w-4" />
+                          )}
+                        </CommandItem>
+                        {MOCK_FOLDERS.map((folder) => (
+                          <CommandItem
+                            key={folder.id}
+                            value={folder.name}
+                            onSelect={() => {
+                              setSelectedFolderId(folder.id);
+                              setIsFolderOpen(false);
+                            }}
+                          >
+                            <FolderIcon
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                folder.color === "blue-500" && "text-blue-500",
+                                folder.color === "green-500" &&
+                                  "text-green-500",
+                                folder.color === "orange-500" &&
+                                  "text-orange-500",
+                              )}
+                            />
+                            <span>{folder.name}</span>
+                            {selectedFolderId === folder.id && (
+                              <Check className="ml-auto h-4 w-4" />
+                            )}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
 
               {/* Date Picker */}
               <Popover>
