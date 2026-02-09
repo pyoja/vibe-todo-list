@@ -64,20 +64,6 @@ export function LandingPage() {
             </Link>
           </div>
         </div>
-
-        {/* Hero Image */}
-        <div className="mt-16 relative w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-12 duration-700 delay-500 px-4 sm:px-0">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900">
-            <Image
-              src="/hero-app.png"
-              alt="Daypiece App Interface"
-              width={1200}
-              height={800}
-              className="w-full h-auto object-cover"
-              priority
-            />
-          </div>
-        </div>
       </main>
 
       {/* Interactive Demo Section */}
