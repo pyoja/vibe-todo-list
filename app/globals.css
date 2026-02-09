@@ -184,3 +184,19 @@
     @apply rounded-3xl bg-white dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ease-out;
   }
 }
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 40s linear infinite;
+}
+
+.hover\:pause:hover {
+  animation-play-state: paused;
+}
