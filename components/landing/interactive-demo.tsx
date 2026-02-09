@@ -234,9 +234,7 @@ export function InteractiveDemo() {
   };
 
   const deleteTodo = (id: string) => {
-    if (confirm("데모 버전입니다. 정말 삭제하시겠습니까?")) {
-      setTodos((prev) => prev.filter((t) => t.id !== id));
-    }
+    setTodos((prev) => prev.filter((t) => t.id !== id));
   };
 
   const selectedFolder = MOCK_FOLDERS.find((f) => f.id === selectedFolderId);
