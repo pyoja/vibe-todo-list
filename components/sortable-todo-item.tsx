@@ -151,7 +151,7 @@ export function TodoItem({
   isOverlay,
   innerRef,
 }: TodoItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
   const [isAddingSubTask, setIsAddingSubTask] = useState(false);
@@ -595,7 +595,7 @@ export function TodoItem({
         )}
 
         {/* Sub Tasks Section */}
-        {isExpanded && (
+        {isExpanded && hasSubTodos && (
           <SubTodoList
             todoId={todo.id}
             subTodos={subTodos}

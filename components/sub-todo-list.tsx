@@ -43,7 +43,7 @@ export function SubTodoList({
   const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
 
   return (
-    <div className="w-full mt-3 space-y-2 pl-9">
+    <div className="w-full mt-3 space-y-2 pl-14 pr-14">
       {/* Progress Bar */}
       {total > 0 && (
         <div className="flex items-center gap-2 mb-2">
