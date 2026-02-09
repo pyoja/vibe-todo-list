@@ -144,7 +144,7 @@ export function TodoInput({
                 setPriority(v as "low" | "medium" | "high")
               }
             >
-              <SelectTrigger className="h-8 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0">
+              <SelectTrigger className="h-8 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200">
                 <div
                   className={cn(
                     "w-2 h-2 rounded-full",
@@ -172,7 +172,7 @@ export function TodoInput({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
                     selectedFolderId !== "inbox" &&
                       "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                   )}
@@ -244,7 +244,7 @@ export function TodoInput({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+                      "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
                       dueDate &&
                         "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                     )}

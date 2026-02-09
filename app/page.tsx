@@ -32,8 +32,12 @@ export default async function Page({
               <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
                 <Puzzle className="w-5 h-5" />
               </div>
-              <span className="hidden sm:inline">하루조각</span>
-              <span className="sm:hidden">하루조각</span>
+              <span className="hidden sm:inline text-zinc-900 dark:text-zinc-50">
+                하루조각
+              </span>
+              <span className="sm:hidden text-zinc-900 dark:text-zinc-50">
+                하루조각
+              </span>
             </div>
           </div>
           <div className="flex gap-4 items-center">

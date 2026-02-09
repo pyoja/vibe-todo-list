@@ -191,11 +191,9 @@ export function TodoItem({
       style={style}
       // by jh 20260206: Changed from motion.li to li to eliminate framer-motion conflicts with dnd-kit
       className={cn(
-        "group relative flex flex-col rounded-2xl transition-all duration-300 w-full max-w-full",
+        "group relative flex flex-col rounded-3xl transition-all duration-300 w-full max-w-full",
         // Default Style (Not dragging, Not overlay)
-        !isDragging &&
-          !isOverlay &&
-          "p-4 bg-white dark:bg-zinc-900/80 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm hover:shadow-lg hover:border-zinc-300/50 dark:hover:border-zinc-700 hover:-translate-y-0.5",
+        !isDragging && !isOverlay && "p-4 soft-pop-card",
 
         // Completed Style
         todo.isCompleted &&
@@ -205,11 +203,11 @@ export function TodoItem({
         // Dragging Placeholder Style (Ghost Card)
         isDragging &&
           !isOverlay &&
-          "opacity-100 p-4 bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-blue-400 shadow-inner",
+          "opacity-100 p-4 bg-blue-50/50 dark:bg-blue-900/20 border-2 border-dashed border-blue-400 shadow-inner rounded-3xl",
 
         // Overlay Style (The item following the cursor)
         isOverlay &&
-          "p-4 bg-white dark:bg-zinc-900 opacity-100 shadow-2xl scale-105 border-2 border-blue-500 z-50 cursor-grabbing ring-4 ring-blue-500/10",
+          "p-4 soft-pop-card opacity-100 shadow-2xl scale-105 border-2 border-blue-500 z-50 cursor-grabbing ring-4 ring-blue-500/10",
       )}
     >
       {/* Drop Indicator (Center of the ghost card) */}
@@ -264,8 +262,8 @@ export function TodoItem({
               className={cn(
                 "mt-1 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95",
                 todo.isCompleted
-                  ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20"
-                  : "border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400 bg-zinc-50 dark:bg-zinc-800",
+                  ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-200 dark:ring-blue-900"
+                  : "border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400 bg-white/50 dark:bg-zinc-800/50 backdrop-blur-sm",
               )}
             >
               <Check
@@ -417,7 +415,7 @@ export function TodoItem({
           <div className="mt-0 flex items-center justify-end gap-1">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
+                <button className="p-2 text-zinc-400 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
                   <MoreVertical className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
