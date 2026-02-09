@@ -41,6 +41,7 @@ interface TodoListProps {
     image?: string | null;
   };
   folderId?: string;
+  today?: Date;
 }
 
 const FOLDER_COLORS: Record<string, string> = {
@@ -85,6 +86,7 @@ export function TodoList({
   folders,
   user,
   folderId,
+  today = new Date(),
 }: TodoListProps) {
   const [isPending, setIsPending] = useState(false);
 
@@ -95,9 +97,7 @@ export function TodoList({
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
   const [view, setView] = useState<"list" | "calendar">("list");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date(),
-  );
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(today);
   const [priorityFilter, setPriorityFilter] = useState<
     "all" | "low" | "medium" | "high"
   >("all");
@@ -694,6 +694,7 @@ export function TodoList({
         onToggleSubTodo={handleToggleSubTodo}
         onDeleteSubTodo={handleDeleteSubTodo}
         onUpdateSubTodo={handleUpdateSubTodo}
+        defaultDate={today}
       />
 
       <FolderDialogs

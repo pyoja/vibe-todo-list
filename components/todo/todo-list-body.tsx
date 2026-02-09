@@ -50,6 +50,7 @@ interface TodoListBodyProps {
   ) => void;
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
   onUpdateSubTodo: (todoId: string, subTodoId: string, content: string) => void;
+  defaultDate?: Date;
 }
 
 export function TodoListBody({
@@ -73,6 +74,7 @@ export function TodoListBody({
   onToggleSubTodo,
   onDeleteSubTodo,
   onUpdateSubTodo,
+  defaultDate,
 }: TodoListBodyProps) {
   return (
     <>
@@ -88,6 +90,7 @@ export function TodoListBody({
               todos={optimisticTodos} // Pass all todos to calendar
               selectedDate={selectedDate}
               onSelectDate={onSelectDate}
+              defaultMonth={defaultDate}
             />
             <div className="flex items-center gap-2 mt-4 px-2">
               <div className="h-px bg-zinc-200 dark:bg-zinc-800 flex-1" />

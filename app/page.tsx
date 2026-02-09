@@ -48,6 +48,7 @@ export default async function Page({
             folders={folders}
             user={session.user}
             folderId={params?.folderId}
+            today={new Date()}
           />
         </main>
       </div>

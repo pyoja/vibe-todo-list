@@ -22,6 +22,12 @@ export function DayCompletionCard({
   completedCount,
 }: DayCompletionCardProps) {
   const [downloading, setDownloading] = useState(false);
+  const [formattedDate, setFormattedDate] = useState("");
+
+  useEffect(() => {
+    // Set formatted date on client-side only to prevent hydration mismatch
+    setFormattedDate(format(new Date(), "M월 d일 EEEE", { locale: ko }));
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -90,6 +96,7 @@ export function DayCompletionCard({
           <button
             onClick={onClose}
             className="absolute -top-12 right-0 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+            aria-label="닫기"
           >
             <X className="w-5 h-5" />
           </button>
@@ -117,7 +124,7 @@ export function DayCompletionCard({
                 </h2>
                 <div className="w-12 h-1 bg-white/30 mx-auto rounded-full" />
                 <p className="text-blue-100 font-medium pt-2">
-                  {format(new Date(), "M월 d일 EEEE", { locale: ko })}
+                  {formattedDate}
                 </p>
               </div>
 

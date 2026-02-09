@@ -18,10 +18,14 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const [greeting, setGreeting] = useState("");
   const [icon, setIcon] = useState<React.ReactNode>(null);
+  const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
     const updateGreeting = () => {
-      const hour = new Date().getHours();
+      const now = new Date();
+      const hour = now.getHours();
+      setCurrentDate(format(now, "yyyy년 M월 d일 EEEE", { locale: ko }));
+
       if (hour < 12) {
         setGreeting("좋은 아침입니다");
         setIcon(<Sun className="w-5 h-5 text-orange-400" />);
@@ -49,7 +53,7 @@ export function DashboardHeader({
         {/* Left: Greeting & Date */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-blue-100/90 text-sm font-medium tracking-wide">
-            {format(new Date(), "yyyy년 M월 d일 EEEE", { locale: ko })}
+            {currentDate}
           </div>
           <div className="flex flex-col">
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight leading-tight text-white mb-2">

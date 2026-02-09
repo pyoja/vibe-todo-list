@@ -27,6 +27,7 @@ interface CalendarViewProps {
   todos: Todo[];
   selectedDate: Date | undefined;
   onSelectDate: (date: Date | undefined) => void;
+  defaultMonth?: Date;
 }
 
 interface DayModifiers {
@@ -40,9 +41,13 @@ export function CalendarView({
   todos,
   selectedDate,
   onSelectDate,
+  defaultMonth,
 }: CalendarViewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // Initialize with server-provided defaultMonth to ensure hydration match
+  const [currentMonth, setCurrentMonth] = useState<Date>(
+    defaultMonth || new Date(),
+  );
 
   // Sync current month with selected date if changed externally
   // useEffect(() => {
@@ -68,6 +73,8 @@ export function CalendarView({
     };
   };
 
+  // Removed guard clause as we now have a valid initial state from server
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center px-2">
@@ -79,6 +86,7 @@ export function CalendarView({
                 size="icon"
                 className="h-6 w-6"
                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                aria-label="이전 달"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -90,6 +98,7 @@ export function CalendarView({
                 size="icon"
                 className="h-6 w-6"
                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                aria-label="다음 달"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
