@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useOptimistic, useMemo, startTransition } from "react";
+import {
+  useState,
+  useOptimistic,
+  useMemo,
+  startTransition,
+  useEffect,
+} from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
@@ -481,22 +487,6 @@ export function TodoList({
     await updateTodo(id, { priority: newPriority });
   };
 
-  const handleFolderChange = async (id: string, newFolderId: string | null) => {
-    const targetFolder = folders.find((f) => f.id === newFolderId);
-    startTransition(() => {
-      addOptimisticTodo({
-        type: "update",
-        id,
-        updates: {
-          folderId: newFolderId,
-          folderName: targetFolder?.name,
-          folderColor: targetFolder?.color,
-        },
-      });
-    });
-    await updateTodo(id, { folderId: newFolderId });
-  };
-
   // SubTodo Handlers
   const handleAddSubTodo = async (todoId: string, content: string) => {
     const tempSubTodo: SubTodo = {
@@ -576,7 +566,9 @@ export function TodoList({
     }
   };
 
-  // Folder Management Handlers
+  // Guest Folder State
+  const activeFolders = folders;
+
   const handleEditFolder = (folder: Folder) => {
     setEditingFolder(folder);
     setNewFolderName(folder.name);
@@ -636,7 +628,7 @@ export function TodoList({
       />
 
       <FolderSection
-        folders={folders}
+        folders={activeFolders}
         initialTodos={sourceTodos}
         folderId={folderId}
         onEditFolder={handleEditFolder}
@@ -669,7 +661,7 @@ export function TodoList({
         isPending={isPending}
         view={view}
         selectedDate={selectedDate}
-        folders={folders}
+        folders={activeFolders}
         defaultFolderId={folderId}
       />
 
@@ -677,7 +669,7 @@ export function TodoList({
         view={view}
         filteredTodos={filteredTodos}
         optimisticTodos={optimisticTodos}
-        folders={folders}
+        folders={activeFolders}
         FOLDER_COLORS={FOLDER_COLORS}
         activeId={activeId}
         sensors={sensors}
@@ -689,7 +681,21 @@ export function TodoList({
         onUpdate={handleUpdateTodo}
         onDelete={handleDelete}
         onPriorityChange={handlePriorityChange}
-        onFolderChange={handleFolderChange}
+        onFolderChange={async (id, newFolderId) => {
+          const targetFolder = activeFolders.find((f) => f.id === newFolderId);
+          startTransition(() => {
+            addOptimisticTodo({
+              type: "update",
+              id,
+              updates: {
+                folderId: newFolderId,
+                folderName: targetFolder?.name,
+                folderColor: targetFolder?.color,
+              },
+            });
+          });
+          await updateTodo(id, { folderId: newFolderId });
+        }}
         onAddSubTodo={handleAddSubTodo}
         onToggleSubTodo={handleToggleSubTodo}
         onDeleteSubTodo={handleDeleteSubTodo}

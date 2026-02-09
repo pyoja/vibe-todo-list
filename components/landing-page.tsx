@@ -1,66 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Puzzle } from "lucide-react";
 import { ModeToggle } from "@/components/mode-toggle";
-import { TodoList } from "@/components/todo-list";
+// by jh 20260209: Removed TodoList import due to guest mode removal
 import { InteractiveDemo } from "@/components/landing/interactive-demo";
 import { Testimonials } from "@/components/landing/testimonials";
 import { StatsCounter } from "@/components/landing/stats-counter";
 
 export function LandingPage() {
-  const [isGuest, setIsGuest] = useState(false);
-
-  if (isGuest) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-black selection:bg-blue-100 dark:selection:bg-blue-900">
-        <header className="px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-          <div className="flex items-center gap-3 font-bold text-xl tracking-tight">
-            {/* Guest simplified header */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
-                <Puzzle className="w-5 h-5" />
-              </div>
-              <span className="hidden sm:inline">하루조각</span>
-              <span className="sm:hidden">하루조각</span>
-            </div>
-            <div className="h-6 w-px bg-slate-200 dark:bg-zinc-800 mx-1" />
-            <span className="text-xs font-medium text-slate-500 bg-slate-100 dark:bg-zinc-900 px-2 py-0.5 rounded-full">
-              게스트 모드
-            </span>
-          </div>
-          <div className="flex gap-4 items-center">
-            <ModeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsGuest(false)}
-              className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-            >
-              나가기
-            </Button>
-            <Link href="/login">
-              <Button size="sm">로그인</Button>
-            </Link>
-          </div>
-        </header>
-        <div className="flex max-w-4xl mx-auto">
-          {/* No Sidebar for Guest Mode to simplify */}
-          <main className="flex-1 py-4 sm:py-10 px-4 sm:px-6">
-            <TodoList
-              initialTodos={[]}
-              folders={[]}
-              // user is undefined for guest
-            />
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-black selection:bg-blue-100 dark:selection:bg-blue-900">
       {/* Navigation (Simple) */}
@@ -69,12 +19,15 @@ export function LandingPage() {
           <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white">
             <Puzzle className="w-5 h-5" />
           </div>
-          하루조각
+          <span className="text-zinc-900 dark:text-zinc-50">하루조각</span>
         </div>
         <div className="flex gap-4 items-center">
           <ModeToggle />
           <Link href="/login">
-            <Button variant="ghost" className="font-medium">
+            <Button
+              variant="ghost"
+              className="font-medium text-zinc-700 dark:text-zinc-200"
+            >
               로그인
             </Button>
           </Link>
@@ -109,15 +62,6 @@ export function LandingPage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setIsGuest(true)}
-              className="w-full sm:w-auto h-12 px-8 text-lg rounded-full border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-900"
-            >
-              게스트로 체험하기
-            </Button>
           </div>
         </div>
 

@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import { type Todo } from "@/app/actions/todo";
 import * as serverActions from "@/app/actions/todo";
-import { type SubTodo } from "@/app/actions/subtodo";
 import * as subTodoActions from "@/app/actions/subtodo";
 
 type TodoManagerProps = {
@@ -11,61 +10,8 @@ type TodoManagerProps = {
 };
 
 export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
-  const isGuest = !userId;
-  const mounted = useRef(false);
-
-  // Separate state for Guest Mode only
-  const [guestTodos, setGuestTodos] = useState<Todo[]>(() => {
-    // Initialize state lazily
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("guest_todos");
-      if (saved) {
-        try {
-          return JSON.parse(saved, (key, value) => {
-            if (key === "createdAt" || key === "dueDate") {
-              return value ? new Date(value) : null;
-            }
-            return value;
-          });
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-    return [];
-  });
-
   // Derived state: Use guestTodos for guests, initialTodos for auth users
-  const todos = isGuest ? guestTodos : initialTodos;
-
-  // Reload guest todos when switching to guest mode (skip initial mount as useState handles it)
-  useEffect(() => {
-    if (!mounted.current) {
-      mounted.current = true;
-      return;
-    }
-
-    if (isGuest) {
-      const saved = localStorage.getItem("guest_todos");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved, (key, value) => {
-            if (key === "createdAt" || key === "dueDate") {
-              return value ? new Date(value) : null;
-            }
-            return value;
-          });
-          setTimeout(() => setGuestTodos(parsed), 0);
-        } catch {}
-      }
-    }
-  }, [isGuest]);
-
-  // Persistence Helper for Guest
-  const saveToLocal = (newTodos: Todo[]) => {
-    localStorage.setItem("guest_todos", JSON.stringify(newTodos));
-    setGuestTodos(newTodos);
-  };
+  const todos = initialTodos;
 
   // --- CRUD Operations ---
 
@@ -76,107 +22,35 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     dueDate?: Date,
     tags: string[] = [],
   ) => {
-    if (isGuest) {
-      const newTodo: Todo = {
-        id: crypto.randomUUID(),
-        content,
-        isCompleted: false,
-        createdAt: new Date(),
-        userId: "guest",
-        folderId: folderId || null,
-        priority,
-        dueDate: dueDate || null,
-        order: Date.now(),
-        tags,
-      };
-      const updated = [newTodo, ...todos];
-      saveToLocal(updated);
-      return newTodo;
-    } else {
-      return await serverActions.createTodo(
-        content,
-        folderId,
-        priority,
-        dueDate,
-        tags,
-      );
-    }
+    return await serverActions.createTodo(
+      content,
+      folderId,
+      priority,
+      dueDate,
+      tags,
+    );
   };
 
   const toggleTodo = async (id: string, isCompleted: boolean) => {
-    if (isGuest) {
-      const updated = todos.map((t) =>
-        t.id === id ? { ...t, isCompleted: isCompleted } : t,
-      );
-
-      saveToLocal(updated);
-    } else {
-      await serverActions.toggleTodo(id, isCompleted);
-    }
+    await serverActions.toggleTodo(id, isCompleted);
   };
 
   const updateTodo = async (id: string, updates: Partial<Todo>) => {
-    if (isGuest) {
-      const updated = todos.map((t) =>
-        t.id === id ? { ...t, ...updates } : t,
-      );
-      saveToLocal(updated);
-    } else {
-      await serverActions.updateTodo(id, updates);
-    }
+    await serverActions.updateTodo(id, updates);
   };
 
   const deleteTodo = async (id: string) => {
-    if (isGuest) {
-      const todoToDelete = todos.find((t) => t.id === id);
-      const updated = todos.filter((t) => t.id !== id);
-      saveToLocal(updated);
-      return todoToDelete;
-    } else {
-      return await serverActions.deleteTodo(id);
-    }
+    return await serverActions.deleteTodo(id);
   };
 
   const restoreTodo = async (todo: Todo) => {
-    if (isGuest) {
-      const updated = [todo, ...todos];
-      // Re-sort: Completed -> Order -> CreatedAt
-      updated.sort((a, b) => {
-        if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-        if (a.order !== b.order) return a.order - b.order;
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      });
-      saveToLocal(updated);
-    } else {
-      await serverActions.restoreTodo(todo);
-    }
+    await serverActions.restoreTodo(todo);
   };
 
   // --- SubTodo Operations ---
 
   const addSubTodo = async (todoId: string, content: string) => {
-    if (isGuest) {
-      const newSubTodo: SubTodo = {
-        id: crypto.randomUUID(),
-        todoId,
-        content,
-        isCompleted: false,
-        createdAt: new Date(),
-        order: Date.now(),
-      };
-      const updated = todos.map((t) => {
-        if (t.id === todoId) {
-          return { ...t, subTodos: [...(t.subTodos || []), newSubTodo] };
-        }
-        return t;
-      });
-      saveToLocal(updated);
-      return newSubTodo;
-    } else {
-      return await subTodoActions.createSubTodo(todoId, content);
-    }
+    return await subTodoActions.createSubTodo(todoId, content);
   };
 
   const toggleSubTodo = async (
@@ -184,63 +58,15 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     subTodoId: string,
     isCompleted: boolean,
   ) => {
-    if (isGuest) {
-      const updated = todos.map((t) => {
-        if (t.id === todoId) {
-          return {
-            ...t,
-            subTodos: (t.subTodos || []).map((st) =>
-              st.id === subTodoId ? { ...st, isCompleted } : st,
-            ),
-          };
-        }
-        return t;
-      });
-      saveToLocal(updated);
-    } else {
-      await subTodoActions.toggleSubTodo(subTodoId, isCompleted);
-    }
+    await subTodoActions.toggleSubTodo(subTodoId, isCompleted);
   };
 
   const deleteSubTodo = async (todoId: string, subTodoId: string) => {
-    if (isGuest) {
-      const updated = todos.map((t) => {
-        if (t.id === todoId) {
-          return {
-            ...t,
-            subTodos: (t.subTodos || []).filter((st) => st.id !== subTodoId),
-          };
-        }
-        return t;
-      });
-      saveToLocal(updated);
-    } else {
-      await subTodoActions.deleteSubTodo(subTodoId);
-    }
+    await subTodoActions.deleteSubTodo(subTodoId);
   };
 
   const reorderTodos = async (items: { id: string; order: number }[]) => {
-    if (isGuest) {
-      // Create a map for quick lookup of new orders
-      const orderMap = new Map(items.map((item) => [item.id, item.order]));
-      const updated = todos.map((t) => {
-        if (orderMap.has(t.id)) {
-          return { ...t, order: orderMap.get(t.id)! };
-        }
-        return t;
-      });
-      // Sort immediately to reflect changes
-      updated.sort((a, b) => {
-        if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-        if (a.order !== b.order) return a.order - b.order;
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      });
-      saveToLocal(updated);
-    } else {
-      await serverActions.reorderTodos(items);
-    }
+    await serverActions.reorderTodos(items);
   };
 
   return {
@@ -254,6 +80,5 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     addSubTodo,
     toggleSubTodo,
     deleteSubTodo,
-    isGuest,
   };
 }

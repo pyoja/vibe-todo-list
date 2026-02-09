@@ -140,7 +140,6 @@ export function InteractiveDemo() {
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
-  const [addedCount, setAddedCount] = useState(0);
 
   const [playPop] = useSound(
     "https://pub-3626123a908346b095493b827f311c82.r2.dev/pop_c0c.mp3",
@@ -167,17 +166,6 @@ export function InteractiveDemo() {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
-
-    if (addedCount >= 3) {
-      toast("체험판에서는 3개까지만 추가할 수 있습니다.", {
-        description: "회원가입 후 제한 없이 이용해보세요!",
-        action: {
-          label: "가입하기",
-          onClick: () => (window.location.href = "/login"),
-        },
-      });
-      return;
-    }
 
     setIsPending(true);
 
@@ -211,7 +199,6 @@ export function InteractiveDemo() {
       setPriority("medium");
       setDueDate(undefined);
       setSelectedFolderId(null);
-      setAddedCount((prev) => prev + 1);
       setIsPending(false);
       toast.success("할 일이 추가되었습니다.");
     }, 400);
@@ -282,7 +269,7 @@ export function InteractiveDemo() {
                 value={priority}
                 onValueChange={(v: "low" | "medium" | "high") => setPriority(v)}
               >
-                <SelectTrigger className="h-8 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0">
+                <SelectTrigger className="h-8 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200">
                   <div
                     className={cn(
                       "w-2 h-2 rounded-full",
@@ -311,7 +298,7 @@ export function InteractiveDemo() {
               >
                 <SelectTrigger
                   className={cn(
-                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors border-transparent focus:ring-0",
+                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors border-transparent focus:ring-0 text-zinc-600 dark:text-zinc-300",
                     selectedFolderId &&
                       "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                   )}
@@ -358,7 +345,7 @@ export function InteractiveDemo() {
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors",
+                      "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
                       dueDate &&
                         "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                     )}
