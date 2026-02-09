@@ -1,5 +1,5 @@
 import "./globals.css";
-import Script from "next/script";
+
 import { ThemeProvider } from "@/components/theme-provider";
 import { PWAInstallManager } from "@/components/pwa/pwa-manager";
 import { PWAInstallBanner } from "@/components/pwa-install-banner"; // by jh 20260205
@@ -58,7 +58,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <head />
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9329554488802994"
+          crossOrigin="anonymous"
+        ></script>
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
@@ -76,11 +82,6 @@ export default function RootLayout({
           <PWAInstallManager />
           <PWAInstallBanner />
           <Toaster />
-          <Script
-            async
-            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9329554488802994"
-            crossOrigin="anonymous"
-          />
         </ThemeProvider>
       </body>
     </html>
