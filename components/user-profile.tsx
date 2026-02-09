@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -19,23 +19,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import {
-  LogOut,
-  User as UserIcon,
-  Settings,
-  Loader2,
-  Bell,
-} from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Loader2 } from "lucide-react";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import {
-  updateProfileName,
-  getNotificationSettings,
-  updateNotificationSettings,
-} from "@/app/actions/user";
+import { updateProfileName } from "@/app/actions/user";
 
 interface UserProfileProps {
   user: {
@@ -52,35 +41,6 @@ export function UserProfile({ user }: UserProfileProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [name, setName] = useState(user.name);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  // Notification Settings State
-  const [pushEnabled, setPushEnabled] = useState(false);
-  const [morningTime, setMorningTime] = useState("08:00");
-  const [eveningTime, setEveningTime] = useState("22:00");
-  const [weekendDnd, setWeekendDnd] = useState(true);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
-
-  // Load settings when dialog opens
-  useEffect(() => {
-    if (isProfileOpen) {
-      const loadSettings = async () => {
-        setIsLoadingSettings(true);
-        try {
-          const settings = await getNotificationSettings();
-          setPushEnabled(settings.pushEnabled);
-          setMorningTime(settings.morningTime || "08:00");
-          setEveningTime(settings.eveningTime || "22:00");
-          setWeekendDnd(settings.weekendDnd);
-        } catch (error) {
-          console.error(error);
-          toast.error("설정을 불러오는데 실패했습니다.");
-        } finally {
-          setIsLoadingSettings(false);
-        }
-      };
-      loadSettings();
-    }
-  }, [isProfileOpen]);
 
   const handleSignOut = async () => {
     setIsSignOutLoading(true);
@@ -103,14 +63,6 @@ export function UserProfile({ user }: UserProfileProps) {
       if (name !== user.name) {
         await updateProfileName(name);
       }
-
-      // 2. Update Settings
-      await updateNotificationSettings({
-        pushEnabled,
-        morningTime,
-        eveningTime,
-        weekendDnd,
-      });
 
       toast.success("프로필이 업데이트되었습니다.");
       router.refresh(); // Refresh to update name in Header/Sidebar
@@ -182,7 +134,7 @@ export function UserProfile({ user }: UserProfileProps) {
             </DialogDescription>
           </DialogHeader>
 
-          {isLoadingSettings ? (
+          {false ? (
             <div className="py-12 flex justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
             </div>
@@ -222,79 +174,6 @@ export function UserProfile({ user }: UserProfileProps) {
                       className="col-span-3 opacity-70 bg-slate-100 dark:bg-zinc-800"
                     />
                   </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 border-t pt-4 border-zinc-100 dark:border-zinc-800">
-                <h4 className="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                  <Bell className="w-4 h-4" /> 알림 설정
-                </h4>
-                <div className="grid gap-4 pl-1">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="pushEnabled"
-                      className="text-sm font-medium cursor-pointer"
-                    >
-                      푸시 알림 받기
-                    </label>
-                    <Checkbox
-                      id="pushEnabled"
-                      checked={pushEnabled}
-                      onCheckedChange={(checked) =>
-                        setPushEnabled(checked as boolean)
-                      }
-                    />
-                  </div>
-
-                  {pushEnabled && (
-                    <div className="space-y-3 bg-slate-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-slate-100 dark:border-zinc-800 text-sm">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <label
-                          htmlFor="morningTime"
-                          className="text-right text-muted-foreground"
-                        >
-                          모닝 브리핑
-                        </label>
-                        <Input
-                          id="morningTime"
-                          type="time"
-                          value={morningTime}
-                          onChange={(e) => setMorningTime(e.target.value)}
-                          className="col-span-3 h-8"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <label
-                          htmlFor="eveningTime"
-                          className="text-right text-muted-foreground"
-                        >
-                          저녁 회고
-                        </label>
-                        <Input
-                          id="eveningTime"
-                          type="time"
-                          value={eveningTime}
-                          onChange={(e) => setEveningTime(e.target.value)}
-                          className="col-span-3 h-8"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between pt-1">
-                        <label
-                          htmlFor="weekendDnd"
-                          className="text-muted-foreground cursor-pointer"
-                        >
-                          주말 알림 끄기
-                        </label>
-                        <Checkbox
-                          id="weekendDnd"
-                          checked={weekendDnd}
-                          onCheckedChange={(checked) =>
-                            setWeekendDnd(checked as boolean)
-                          }
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 

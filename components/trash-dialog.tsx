@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, startTransition } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,17 +10,17 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2, RotateCcw, AlertTriangle } from "lucide-react";
+import { Trash2, RotateCcw } from "lucide-react";
 import {
   getDeletedTodos,
   restoreTodo,
   permanentDeleteTodo,
+  emptyTrash,
   type Todo,
 } from "@/app/actions/todo";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { toast } from "sonner";
-import { useSoundEffects } from "@/hooks/use-sound-effects"; // Assuming hook exists
 
 export function TrashDialog() {
   const [deletedTodos, setDeletedTodos] = useState<Todo[]>([]);
@@ -69,6 +69,23 @@ export function TrashDialog() {
     }
   };
 
+  const handleEmptyTrash = async () => {
+    if (
+      !confirm(
+        "휴지통을 정말 비우시겠습니까? 모든 항목이 영구 삭제되며 복구할 수 없습니다.",
+      )
+    )
+      return;
+
+    try {
+      await emptyTrash();
+      setDeletedTodos([]);
+      toast.success("휴지통을 비웠습니다.");
+    } catch (e) {
+      toast.error("휴지통 비우기 실패");
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -83,7 +100,19 @@ export function TrashDialog() {
       </DialogTrigger>
       <DialogContent className="max-w-md max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>휴지통</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>휴지통</span>
+            {deletedTodos.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={handleEmptyTrash}
+              >
+                전체 삭제
+              </Button>
+            )}
+          </DialogTitle>
           <DialogDescription>
             삭제된 항목을 복구하거나 영구 삭제할 수 있습니다.
           </DialogDescription>
@@ -110,7 +139,7 @@ export function TrashDialog() {
                     {todo.content}
                   </span>
                   <span className="text-xs text-zinc-400">
-                    {format(new Date(todo.createdAt), "M월 d일 삭제됨(추정)", {
+                    {format(new Date(todo.createdAt), "M월 d일 삭제됨", {
                       locale: ko,
                     })}
                     {/* Note: In real Soft Delete, we usually display deleted_at, but Todo type might need update to include deleted_at optionally if we want to show exact deletion time. For now, createdAt or just generic text is fine. */}

@@ -261,3 +261,27 @@ export async function getTodosForExport() {
     return [];
   }
 }
+
+export async function emptyTrash() {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  try {
+    // Delete sub-todos of deleted todos first
+    await pool.query(
+      'DELETE FROM sub_todo WHERE "todoId" IN (SELECT id FROM todo WHERE "userId" = $1 AND "deleted_at" IS NOT NULL)',
+      [session.user.id],
+    );
+
+    // Delete todos
+    await pool.query(
+      'DELETE FROM todo WHERE "userId" = $1 AND "deleted_at" IS NOT NULL',
+      [session.user.id],
+    );
+
+    revalidatePath("/");
+  } catch (error) {
+    console.error("Failed to empty trash:", error);
+    throw new Error("Failed to empty trash");
+  }
+}
