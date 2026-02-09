@@ -48,7 +48,7 @@ export const viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // maximumScale: 1, // Removed for accessibility (pinch-to-zoom)
 };
 
 export default function RootLayout({

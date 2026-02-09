@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
@@ -94,13 +94,14 @@ interface DemoTodo {
   tags?: string[];
 }
 
-const INITIAL_TODOS: DemoTodo[] = [
+// Initial state without dynamic dates to prevent hydration mismatch
+const STATIC_TODOS: DemoTodo[] = [
   {
     id: "1",
     content: "팀 주간 회의 준비 (발표 자료 정리)",
     isCompleted: false,
     priority: "high",
-    dueDate: new Date().toISOString(),
+    // dueDate: set in useEffect
     folderName: "업무",
     folderColor: "blue-500",
     tags: ["회의", "발표"],
@@ -119,7 +120,7 @@ const INITIAL_TODOS: DemoTodo[] = [
     content: "저녁 러닝 5km 뛰기",
     isCompleted: true,
     priority: "low",
-    dueDate: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+    // dueDate: set in useEffect
     folderName: "운동",
     folderColor: "orange-500",
   },
@@ -132,7 +133,8 @@ const MOCK_FOLDERS = [
 ];
 
 export function InteractiveDemo() {
-  const [todos, setTodos] = useState<DemoTodo[]>(INITIAL_TODOS);
+  const [todos, setTodos] = useState<DemoTodo[]>(STATIC_TODOS);
+  const [isClient, setIsClient] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
@@ -144,6 +146,23 @@ export function InteractiveDemo() {
     "https://pub-3626123a908346b095493b827f311c82.r2.dev/pop_c0c.mp3",
     { volume: 0.5 },
   );
+
+  // Initialize dates on client-side only to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+
+    setTodos((prev) =>
+      prev.map((todo) => {
+        if (todo.id === "1") return { ...todo, dueDate: now.toISOString() };
+        if (todo.id === "3")
+          return { ...todo, dueDate: tomorrow.toISOString() };
+        return todo;
+      }),
+    );
+  }, []);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -425,6 +444,7 @@ export function InteractiveDemo() {
                         ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20"
                         : "border-zinc-300 dark:border-zinc-600 group-hover:border-blue-400 bg-zinc-50 dark:bg-zinc-800",
                     )}
+                    aria-label={todo.isCompleted ? "완료 취소" : "완료 처리"}
                   >
                     <Check
                       className={cn(
@@ -451,7 +471,7 @@ export function InteractiveDemo() {
                     {/* Meta Tags */}
                     <div className="flex flex-wrap items-center gap-2">
                       {/* Date Badge */}
-                      {todo.dueDate && (
+                      {isClient && todo.dueDate && (
                         <Badge
                           variant="outline"
                           className={cn(
@@ -511,6 +531,7 @@ export function InteractiveDemo() {
                   <button
                     onClick={() => deleteTodo(todo.id)}
                     className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors"
+                    aria-label="할 일 삭제"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
