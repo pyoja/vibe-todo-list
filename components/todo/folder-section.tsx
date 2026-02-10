@@ -133,7 +133,7 @@ export function FolderSection({
             return (
               <Link
                 key="all"
-                href="/"
+                href="/todo"
                 className={cn(
                   "relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5",
                   !folderId
@@ -201,7 +201,7 @@ export function FolderSection({
               )}
             >
               <Link
-                href={`/?folderId=${folder.id}`}
+                href={`/todo?folderId=${folder.id}`}
                 className={cn(
                   "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all hover:shadow-md hover:-translate-y-0.5 min-h-[110px] justify-between",
                   styles.container,

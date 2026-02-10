@@ -296,7 +296,7 @@ function SidebarContent({ initialFolders, onNavigate }: SidebarContentProps) {
 
         <div className="space-y-1">
           <div onClick={onNavigate}>
-            <Link href="/">
+            <Link href="/todo">
               <Button
                 variant="ghost"
                 className={cn(
@@ -379,7 +379,7 @@ function FolderItem({
       >
         <div onClick={onNavigate} className="flex-1 min-w-0 h-full">
           <Link
-            href={`/?folderId=${folder.id}`}
+            href={`/todo?folderId=${folder.id}`}
             className="flex items-center gap-2 w-full h-full"
           >
             <FolderIcon
