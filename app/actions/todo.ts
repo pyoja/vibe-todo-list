@@ -26,7 +26,6 @@ export type Todo = {
   subTodos?: SubTodo[];
   // by jh 20260205: 태그 시스템 추가
   tags?: string[];
-  // by jh 20260210: 이미지 첨부
   imageUrl?: string | null;
 };
 

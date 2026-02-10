@@ -83,7 +83,6 @@ export function TodoInput({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isFolderOpen, setIsFolderOpen] = useState(false);
 
-  // by jh 20260210: 이미지 첨부 상태
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -380,8 +379,10 @@ export function TodoInput({
               </PopoverContent>
             </Popover>
 
-            {/* by jh 20260210: 이미지 첨부 버튼 */}
-            <Button
+            {/* 고려사항: 이미지 첨부 버튼 */}
+            {/* db용량 차지하는 부분이 많음. 없애야할 기능 */}
+            {/* 압축과 이미지 캐싱으로 어느정도 가능할듯 */}
+            {/* <Button
               type="button"
               variant="ghost"
               size="sm"
@@ -399,7 +400,7 @@ export function TodoInput({
               ) : (
                 <ImagePlus className="w-3.5 h-3.5" />
               )}
-            </Button>
+            </Button> */}
           </div>
 
           <Button

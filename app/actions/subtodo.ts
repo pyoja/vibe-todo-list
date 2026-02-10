@@ -11,7 +11,6 @@ export type SubTodo = {
   isCompleted: boolean;
   createdAt: Date;
   order: number;
-  // by jh 20260210: 이미지 첨부
   imageUrl?: string | null;
 };
 
