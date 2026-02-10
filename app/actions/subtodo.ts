@@ -11,6 +11,8 @@ export type SubTodo = {
   isCompleted: boolean;
   createdAt: Date;
   order: number;
+  // by jh 20260210: 이미지 첨부
+  imageUrl?: string | null;
 };
 
 async function getSession() {
@@ -35,7 +37,12 @@ export async function getSubTodos(todoId: string): Promise<SubTodo[]> {
   }
 }
 
-export async function createSubTodo(todoId: string, content: string) {
+// by jh 20260210: imageUrl 파라미터 추가
+export async function createSubTodo(
+  todoId: string,
+  content: string,
+  imageUrl?: string | null,
+) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
@@ -49,8 +56,8 @@ export async function createSubTodo(todoId: string, content: string) {
       throw new Error("Todo not found or unauthorized");
 
     const res = await pool.query(
-      'INSERT INTO sub_todo ("todoId", content, "order") VALUES ($1, $2, (SELECT COALESCE(MAX("order"), 0) + 1 FROM sub_todo WHERE "todoId" = $1)) RETURNING *',
-      [todoId, content],
+      'INSERT INTO sub_todo ("todoId", content, "order", image_url) VALUES ($1, $2, (SELECT COALESCE(MAX("order"), 0) + 1 FROM sub_todo WHERE "todoId" = $1), $3) RETURNING *',
+      [todoId, content, imageUrl || null],
     );
     revalidatePath("/");
     return res.rows[0];

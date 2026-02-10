@@ -373,6 +373,8 @@ export function TodoList({
       dueDate: parsedDueDate || (meta.dueDate ? new Date(meta.dueDate) : null),
       order: Date.now(),
       tags: tags,
+      // by jh 20260210: 이미지 URL Optimistic UI
+      imageUrl: meta.imageUrl,
     };
 
     if (parsedDueDate) {
@@ -394,6 +396,8 @@ export function TodoList({
         meta.priority,
         parsedDueDate || meta.dueDate || undefined,
         tags,
+        // by jh 20260210: 이미지 URL 전달
+        meta.imageUrl,
       );
     } catch (e) {
       console.error(e);

@@ -21,6 +21,8 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     priority: "low" | "medium" | "high" = "medium",
     dueDate?: Date,
     tags: string[] = [],
+    // by jh 20260210: 이미지 URL 파라미터 추가
+    imageUrl?: string | null,
   ) => {
     return await serverActions.createTodo(
       content,
@@ -28,6 +30,7 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
       priority,
       dueDate,
       tags,
+      imageUrl,
     );
   };
 

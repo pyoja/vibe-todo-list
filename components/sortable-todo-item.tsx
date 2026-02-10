@@ -41,6 +41,7 @@ import type { Todo } from "@/app/actions/todo";
 import type { Folder } from "@/app/actions/folder";
 import { SubTodoList } from "@/components/sub-todo-list";
 import { useState, useRef, useEffect } from "react";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 // Helper functions
 const getDateColor = (date: Date) => {
@@ -184,6 +185,9 @@ export function TodoItem({
   // Calculate Subtask Progress
   const subTodos = todo.subTodos || [];
   const hasSubTodos = subTodos.length > 0;
+
+  // by jh 20260210: 이미지 라이트박스 상태
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   return (
     <li
@@ -411,6 +415,23 @@ export function TodoItem({
             </div>
           </div>
 
+          {/* by jh 20260210: 첨부 이미지 표시 */}
+          {todo.imageUrl && (
+            <div className="mt-2 pl-10">
+              <button
+                type="button"
+                onClick={() => setLightboxSrc(todo.imageUrl || null)}
+                className="block rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700 hover:ring-2 hover:ring-blue-400/50 transition-all cursor-zoom-in"
+              >
+                <img
+                  src={todo.imageUrl}
+                  alt="첨부 이미지"
+                  className="max-h-40 object-cover rounded-xl"
+                />
+              </button>
+            </div>
+          )}
+
           {/* Actions Area */}
           <div className="mt-0 flex items-center justify-end gap-1">
             {/* by jh 20260210: 하위 항목 추가 아이콘 버튼 - 작업 메뉴 왼쪽 배치 */}
@@ -580,6 +601,8 @@ export function TodoItem({
           </div>
         )}
       </div>
+      {/* by jh 20260210: 이미지 라이트박스 */}
+      <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </li>
   );
 }

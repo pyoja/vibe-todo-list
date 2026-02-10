@@ -129,7 +129,7 @@ export function TodoListBody({
                     📌
                   </span>
                   <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
-                    언젠가 할 일
+                    마감일 미지정
                   </span>
                   <span className="text-xs font-bold bg-amber-200/80 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
                     {unscheduledTodos.length}

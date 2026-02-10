@@ -8,6 +8,8 @@ import {
   Folder as FolderIcon,
   Inbox,
   Check,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,11 +38,16 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { type Folder } from "@/app/actions/folder";
+import { uploadImage } from "@/app/actions/image";
+import imageCompression from "browser-image-compression";
+import { toast } from "sonner";
 
 export interface TodoInputMeta {
   priority: "low" | "medium" | "high";
   dueDate?: Date;
   folderId?: string | null;
+  // by jh 20260210: 이미지 URL 추가
+  imageUrl?: string | null;
 }
 
 interface TodoInputProps {
@@ -76,6 +83,12 @@ export function TodoInput({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isFolderOpen, setIsFolderOpen] = useState(false);
 
+  // by jh 20260210: 이미지 첨부 상태
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   // Update selected folder when prop changes (navigation)
   useEffect(() => {
     const newFolderId = defaultFolderId || "inbox";
@@ -97,20 +110,76 @@ export function TodoInput({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleSubmit = (formData: FormData) => {
+  const handleSubmit = async (formData: FormData) => {
+    // by jh 20260210: 이미지 업로드 처리
+    let imageUrl: string | null = null;
+    if (selectedFile) {
+      setIsUploading(true);
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", selectedFile);
+        // by jh 20260210: 업로드 중 토스트 표시
+        const toastId = toast.loading("📷 이미지 업로드 중...");
+        imageUrl = await uploadImage(uploadFormData);
+        toast.dismiss(toastId);
+      } catch (error) {
+        console.error("Image upload failed:", error);
+        toast.error("이미지 업로드에 실패했습니다.");
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
     // Pass local state as metadata to parent
     onAdd(formData, {
       priority,
       dueDate,
       folderId: selectedFolderId === "inbox" ? null : selectedFolderId,
+      imageUrl,
     });
 
     // Reset local state
     setPriority("medium");
     setDueDate(undefined);
     setSelectedFolderId(defaultFolderId || "inbox");
+    setImagePreview(null);
+    setSelectedFile(null);
 
     formRef.current?.reset();
+  };
+
+  // by jh 20260210: 이미지 선택 및 클라이언트 압축
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      return;
+    }
+
+    try {
+      // by jh 20260210: 클라이언트 측 이미지 압축 (maxSizeMB: 1, maxWidthOrHeight: 1920)
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      });
+
+      setSelectedFile(compressed);
+      const previewUrl = URL.createObjectURL(compressed);
+      setImagePreview(previewUrl);
+    } catch (error) {
+      console.error("Image compression failed:", error);
+    }
+
+    // by jh 20260210: input 초기화 (동일 파일 재선택 가능)
+    e.target.value = "";
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setSelectedFile(null);
   };
 
   const selectedFolder = folders.find((f) => f.id === selectedFolderId);
@@ -134,6 +203,35 @@ export function TodoInput({
           className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium pl-3 min-h-[60px] placeholder:text-zinc-400 dark:placeholder:text-zinc-300 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
           autoComplete="off"
           disabled={isPending}
+        />
+
+        {/* by jh 20260210: 이미지 미리보기 */}
+        {imagePreview && (
+          <div className="px-3 pb-2">
+            <div className="relative inline-block">
+              <img
+                src={imagePreview}
+                alt="미리보기"
+                className="w-20 h-20 object-cover rounded-xl border border-zinc-200 dark:border-zinc-700"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* by jh 20260210: 숨겨진 파일 입력 */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageSelect}
         />
 
         <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
@@ -267,6 +365,27 @@ export function TodoInput({
                 />
               </PopoverContent>
             </Popover>
+
+            {/* by jh 20260210: 이미지 첨부 버튼 */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+              className={cn(
+                "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                imagePreview &&
+                  "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20",
+              )}
+              title="이미지 첨부"
+            >
+              {isUploading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <ImagePlus className="w-3.5 h-3.5" />
+              )}
+            </Button>
           </div>
 
           <Button

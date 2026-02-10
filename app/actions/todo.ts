@@ -26,6 +26,8 @@ export type Todo = {
   subTodos?: SubTodo[];
   // by jh 20260205: 태그 시스템 추가
   tags?: string[];
+  // by jh 20260210: 이미지 첨부
+  imageUrl?: string | null;
 };
 
 async function getSession() {
@@ -77,13 +79,15 @@ export async function createTodo(
   priority: string = "medium",
   dueDate?: Date | null,
   tags: string[] = [],
+  // by jh 20260210: 이미지 URL 파라미터 추가
+  imageUrl?: string | null,
 ) {
   const session = await getSession();
   if (!session) throw new Error("Unauthorized");
 
   try {
     const res = await pool.query(
-      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate", tags) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      'INSERT INTO todo (content, "userId", "folderId", priority, "dueDate", tags, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
       [
         content,
         session.user.id,
@@ -91,6 +95,7 @@ export async function createTodo(
         priority,
         dueDate || null,
         tags,
+        imageUrl || null,
       ],
     );
     revalidatePath("/");
