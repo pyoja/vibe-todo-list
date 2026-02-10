@@ -709,6 +709,7 @@ export function TodoList({
         onDeleteSubTodo={handleDeleteSubTodo}
         onUpdateSubTodo={handleUpdateSubTodo}
         defaultDate={today}
+        folderId={folderId}
       />
 
       <FolderDialogs

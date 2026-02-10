@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   DndContext,
@@ -51,6 +52,8 @@ interface TodoListBodyProps {
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
   onUpdateSubTodo: (todoId: string, subTodoId: string, content: string) => void;
   defaultDate?: Date;
+  // by jh 20260210: 마감일 미지정 패널에서 폴더 필터 적용용
+  folderId?: string;
 }
 
 export function TodoListBody({
@@ -75,7 +78,20 @@ export function TodoListBody({
   onDeleteSubTodo,
   onUpdateSubTodo,
   defaultDate,
+  folderId,
 }: TodoListBodyProps) {
+  // by jh 20260210: 마감일 미지정 패널 접기/펼치기 상태
+  const [isUnscheduledOpen, setIsUnscheduledOpen] = useState(false);
+
+  // by jh 20260210: 마감일 미지정 할 일 필터링 (폴더 필터도 적용)
+  const unscheduledTodos =
+    view === "calendar"
+      ? optimisticTodos.filter((todo) => {
+          if (todo.dueDate) return false;
+          if (folderId && todo.folderId !== folderId) return false;
+          return true;
+        })
+      : [];
   return (
     <>
       <AnimatePresence mode="popLayout">
@@ -101,6 +117,73 @@ export function TodoListBody({
               </span>
               <div className="h-px bg-zinc-200 dark:bg-zinc-800 flex-1" />
             </div>
+
+            {/* by jh 20260210: 마감일 미지정 할 일 패널 */}
+            {unscheduledTodos.length > 0 && (
+              <div className="mt-4">
+                <button
+                  onClick={() => setIsUnscheduledOpen(!isUnscheduledOpen)}
+                  className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-900/15 border border-amber-200/60 dark:border-amber-800/40 hover:bg-amber-100/80 dark:hover:bg-amber-900/25 transition-all group"
+                >
+                  <span className="text-amber-600 dark:text-amber-400 text-sm">
+                    📌
+                  </span>
+                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                    언젠가 할 일
+                  </span>
+                  <span className="text-xs font-bold bg-amber-200/80 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+                    {unscheduledTodos.length}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 ml-auto text-amber-500 dark:text-amber-400 transition-transform duration-200 ${
+                      isUnscheduledOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                <AnimatePresence>
+                  {isUnscheduledOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-3 pt-3">
+                        {unscheduledTodos.map((todo) => (
+                          <SortableTodoItem
+                            key={todo.id}
+                            todo={todo}
+                            folders={folders}
+                            FOLDER_COLORS={FOLDER_COLORS}
+                            onToggle={onToggle}
+                            onUpdate={onUpdate}
+                            onDelete={onDelete}
+                            onPriorityChange={onPriorityChange}
+                            onFolderChange={onFolderChange}
+                            onAddSubTodo={onAddSubTodo}
+                            onToggleSubTodo={onToggleSubTodo}
+                            onDeleteSubTodo={onDeleteSubTodo}
+                            onUpdateSubTodo={onUpdateSubTodo}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
