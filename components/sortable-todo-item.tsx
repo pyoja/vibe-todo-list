@@ -561,7 +561,8 @@ export function TodoItem({
               }}
               className="flex items-center gap-2"
             >
-              <div className="w-1.5 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+              {/* by jh 20260210: 하위항목 체크박스와 동일한 원형 스타일, 클릭 불가 */}
+              <div className="flex-shrink-0 w-4 h-4 rounded-full border border-zinc-300 dark:border-zinc-600 pointer-events-none opacity-50" />
               <input
                 name="content"
                 autoFocus
