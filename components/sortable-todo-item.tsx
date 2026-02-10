@@ -413,6 +413,18 @@ export function TodoItem({
 
           {/* Actions Area */}
           <div className="mt-0 flex items-center justify-end gap-1">
+            {/* by jh 20260210: 하위 항목 추가 아이콘 버튼 - 작업 메뉴 왼쪽 배치 */}
+            <button
+              title="하위 항목 추가"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(true);
+                setIsAddingSubTask(true);
+              }}
+              className="p-2 text-zinc-400 hover:text-blue-500 dark:text-zinc-400 dark:hover:text-blue-400 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors md:opacity-0 md:group-hover:opacity-100"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="p-2 text-zinc-400 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100">
@@ -431,17 +443,6 @@ export function TodoItem({
                   <Pencil className="w-4 h-4 mr-2" />
                   수정
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsExpanded(true);
-                    setIsAddingSubTask(true);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  하위 항목 추가
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
 
                 {/* Date Sub-menu */}
                 <DropdownMenuSub>
