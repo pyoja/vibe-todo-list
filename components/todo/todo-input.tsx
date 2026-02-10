@@ -235,40 +235,38 @@ export function TodoInput({
               </PopoverContent>
             </Popover>
 
-            {/* Date Picker */}
-            {view !== "calendar" && (
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
-                      dueDate &&
-                        "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
-                    )}
-                  >
-                    <CalendarIcon className={cn("w-3.5 h-3.5 mr-1.5")} />
-                    {dueDate
-                      ? format(dueDate, "M월 d일", { locale: ko })
-                      : "마감일"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={(date) => {
-                      setDueDate(date);
-                      setIsCalendarOpen(false);
-                    }}
-                    initialFocus
-                    locale={ko}
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
+            {/* by jh 20260210: Date Picker - 캘린더 뷰에서도 마감일 피커 표시 */}
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                    dueDate &&
+                      "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+                  )}
+                >
+                  <CalendarIcon className={cn("w-3.5 h-3.5 mr-1.5")} />
+                  {dueDate
+                    ? format(dueDate, "M월 d일", { locale: ko })
+                    : "마감일"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={(date) => {
+                    setDueDate(date);
+                    setIsCalendarOpen(false);
+                  }}
+                  initialFocus
+                  locale={ko}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <Button
