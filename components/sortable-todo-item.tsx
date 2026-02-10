@@ -545,7 +545,7 @@ export function TodoItem({
 
         {/* by jh 20260210: Sub Task Input - 하위항목 목록 아래에 입력창 표시 */}
         {isAddingSubTask && (
-          <div className="pl-16 pr-4 py-2 animate-in slide-in-from-top-1 duration-200">
+          <div className="pl-15 pt-0 pr-4 py-2 animate-in slide-in-from-top-1 duration-200">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
