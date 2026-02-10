@@ -88,6 +88,8 @@ export function TodoInput({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // by jh 20260210: 이미지 압축 중 상태
+  const [isCompressing, setIsCompressing] = useState(false);
 
   // Update selected folder when prop changes (navigation)
   useEffect(() => {
@@ -158,6 +160,8 @@ export function TodoInput({
     }
 
     try {
+      // by jh 20260210: 압축 시작 즉시 로딩 표시
+      setIsCompressing(true);
       // by jh 20260210: 클라이언트 측 이미지 압축 (maxSizeMB: 1, maxWidthOrHeight: 1920)
       const compressed = await imageCompression(file, {
         maxSizeMB: 1,
@@ -170,6 +174,9 @@ export function TodoInput({
       setImagePreview(previewUrl);
     } catch (error) {
       console.error("Image compression failed:", error);
+      toast.error("이미지 처리에 실패했습니다.");
+    } finally {
+      setIsCompressing(false);
     }
 
     // by jh 20260210: input 초기화 (동일 파일 재선택 가능)
@@ -205,8 +212,15 @@ export function TodoInput({
           disabled={isPending}
         />
 
-        {/* by jh 20260210: 이미지 미리보기 */}
-        {imagePreview && (
+        {/* by jh 20260210: 이미지 압축 중 로딩 or 미리보기 */}
+        {isCompressing && (
+          <div className="px-3 pb-2">
+            <div className="w-20 h-20 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+            </div>
+          </div>
+        )}
+        {imagePreview && !isCompressing && (
           <div className="px-3 pb-2">
             <div className="relative inline-block">
               <img

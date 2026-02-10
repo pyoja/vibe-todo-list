@@ -42,7 +42,7 @@ export async function getTodos(folderId?: string): Promise<Todo[]> {
 
   try {
     let query = `
-      SELECT t.*, f.name as "folderName", f.color as "folderColor",
+      SELECT t.*, t.image_url as "imageUrl", f.name as "folderName", f.color as "folderColor",
       (
         SELECT COALESCE(json_agg(st ORDER BY st."order" ASC, st."createdAt" ASC), '[]'::json)
         FROM sub_todo st

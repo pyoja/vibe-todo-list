@@ -13,6 +13,7 @@ import {
   Plus,
   MoreVertical,
   Pencil,
+  ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -412,6 +413,18 @@ export function TodoItem({
                   </div>
                 )}
               </div>
+
+              {/* by jh 20260210: 이미지 첨부 아이콘 */}
+              {todo.imageUrl && (
+                <Badge
+                  variant="outline"
+                  className="text-violet-500 border-violet-200 bg-violet-50 dark:bg-violet-900/20 cursor-pointer hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-colors"
+                  onClick={() => setLightboxSrc(todo.imageUrl || null)}
+                >
+                  <ImageIcon className="w-3 h-3 mr-0.5" />
+                  사진
+                </Badge>
+              )}
             </div>
           </div>
 
