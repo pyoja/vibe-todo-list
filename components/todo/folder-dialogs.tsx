@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2 } from "lucide-react";
 import { type Folder } from "@/app/actions/folder";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,8 @@ interface FolderDialogsProps {
   folderColor: string;
   setFolderColor: (value: string) => void;
   onSave: () => void;
+  // by jh 20260210: 폴더 저장 중 로딩 상태
+  isSaving?: boolean;
 }
 
 const COLORS = [
@@ -44,6 +47,7 @@ export function FolderDialogs({
   folderColor,
   setFolderColor,
   onSave,
+  isSaving = false,
 }: FolderDialogsProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -98,7 +102,13 @@ export function FolderDialogs({
           <Button type="button" variant="ghost" onClick={() => onClose(false)}>
             취소
           </Button>
-          <Button type="submit" onClick={onSave} className="bg-blue-600">
+          <Button
+            type="submit"
+            onClick={onSave}
+            className="bg-blue-600"
+            disabled={isSaving}
+          >
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {editingFolder ? "수정" : "만들기"}
           </Button>
         </DialogFooter>

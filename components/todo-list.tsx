@@ -121,6 +121,8 @@ export function TodoList({
   const [newFolderColor, setNewFolderColor] = useState("blue-500");
 
   const [showCompletionCard, setShowCompletionCard] = useState(false);
+  // by jh 20260210: 폴더 생성/수정 중복 클릭 방지
+  const [isSavingFolder, setIsSavingFolder] = useState(false);
 
   // Sound Effects
   const { playAdd, playComplete, playDelete } = useSoundEffects();
@@ -595,6 +597,10 @@ export function TodoList({
       return;
     }
 
+    // by jh 20260210: 중복 클릭 방지
+    if (isSavingFolder) return;
+    setIsSavingFolder(true);
+
     try {
       if (editingFolder) {
         const { updateFolder } = await import("@/app/actions/folder");
@@ -616,6 +622,8 @@ export function TodoList({
     } catch (error) {
       console.error(error);
       toast.error("폴더 저장에 실패했습니다.");
+    } finally {
+      setIsSavingFolder(false);
     }
   };
 
@@ -712,6 +720,7 @@ export function TodoList({
         folderColor={newFolderColor}
         setFolderColor={setNewFolderColor}
         onSave={handleSaveFolder}
+        isSaving={isSavingFolder}
       />
 
       <DayCompletionCard
