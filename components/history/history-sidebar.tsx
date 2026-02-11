@@ -56,7 +56,7 @@ export function HistorySidebar({
               <div>
                 <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  오늘의 기록
+                  완료된 조각
                 </h2>
                 <p className="text-sm text-zinc-500 mt-1">
                   {completedTodos.length}개의 조각을 모았습니다.
