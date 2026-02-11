@@ -84,7 +84,7 @@ export function ControlBar({
           onClick={onHistoryClick}
         >
           <History className="w-4 h-4" />
-          <span>완료된 조각</span>
+          <span>완료 조각</span>
         </Button>
         <Button
           variant="ghost"
