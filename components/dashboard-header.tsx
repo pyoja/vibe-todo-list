@@ -72,12 +72,13 @@ export function DashboardHeader({
         {/* Right: Summary Card */}
         <div className="flex flex-col gap-3 w-full md:w-auto items-end">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 w-full md:w-auto md:min-w-[320px]">
-            <div className="flex flex-col gap-1 min-w-[120px]">
-              <span className="text-xs text-blue-200 font-medium">
+            {/* Progress Section */}
+            <div className="flex flex-col gap-1 min-w-[100px]">
+              <span className="text-xs text-blue-200 font-medium whitespace-nowrap">
                 오늘의 진행률
               </span>
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-bold tracking-tighter">
+                <span className="text-4xl font-bold tracking-tighter">
                   {progress}%
                 </span>
                 <span className="text-sm text-blue-200 font-medium">완료</span>

@@ -5,6 +5,7 @@ import {
   LayoutList,
   CalendarDays,
   SlidersHorizontal,
+  History,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,6 +34,7 @@ interface ControlBarProps {
   setView: (value: "list" | "calendar") => void;
   filter: "all" | "active" | "completed";
   setFilter: (value: "all" | "active" | "completed") => void;
+  onHistoryClick: () => void;
 }
 
 export function ControlBar({
@@ -48,6 +50,7 @@ export function ControlBar({
   setView,
   filter,
   setFilter,
+  onHistoryClick,
 }: ControlBarProps) {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -72,6 +75,25 @@ export function ControlBar({
             </button>
           )}
         </div>
+
+        {/* History Toggle (New Position) */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="hidden sm:flex items-center gap-1.5 h-9 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+          onClick={onHistoryClick}
+        >
+          <History className="w-4 h-4" />
+          <span>오늘의 기록</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="sm:hidden h-9 w-9 shrink-0"
+          onClick={onHistoryClick}
+        >
+          <History className="w-4 h-4" />
+        </Button>
 
         {/* View Toggle (Always Visible) */}
         <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 flex items-center shrink-0 h-9">

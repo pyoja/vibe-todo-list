@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useOptimistic,
-  useMemo,
-  startTransition,
-  useEffect,
-} from "react";
+import { useState, useOptimistic, useMemo, startTransition } from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
@@ -36,6 +30,7 @@ import { FolderSection } from "@/components/todo/folder-section";
 import { TodoInput, type TodoInputMeta } from "@/components/todo/todo-input";
 import { TodoListBody } from "@/components/todo/todo-list-body";
 import { FolderDialogs } from "@/components/todo/folder-dialogs";
+import { HistorySidebar } from "@/components/history/history-sidebar";
 
 interface TodoListProps {
   initialTodos: Todo[];
@@ -123,6 +118,9 @@ export function TodoList({
   const [showCompletionCard, setShowCompletionCard] = useState(false);
   // by jh 20260210: 폴더 생성/수정 중복 클릭 방지
   const [isSavingFolder, setIsSavingFolder] = useState(false);
+
+  // History Sidebar State
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Sound Effects
   const { playAdd, playComplete, playDelete } = useSoundEffects();
@@ -219,8 +217,15 @@ export function TodoList({
     },
   );
 
+  const completedTodos = useMemo(() => {
+    return optimisticTodos.filter((t) => t.isCompleted);
+  }, [optimisticTodos]);
+
   const filteredTodos = useMemo(() => {
     const result = optimisticTodos.filter((todo) => {
+      // Force hide completed items from main list ("Today's Record" feature)
+      if (todo.isCompleted) return false;
+
       if (
         searchTerm &&
         !todo.content.toLowerCase().includes(searchTerm.toLowerCase())
@@ -253,7 +258,6 @@ export function TodoList({
       if (filter === "completed" && !todo.isCompleted) return false;
 
       // Filter by Folder
-      // If folderId is provided (from props/URL), only show todos in that folder.
       if (folderId && todo.folderId !== folderId) {
         return false;
       }
@@ -631,12 +635,16 @@ export function TodoList({
     }
   };
 
+  const handleUndo = async (id: string) => {
+    handleToggle(id, true); // toggle back to false (isCompleted: true -> false)
+  };
+
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 space-y-6 relative">
       <DashboardHeader
         userName={user?.name || "게스트"}
         totalTodos={optimisticTodos.length}
-        completedTodos={optimisticTodos.filter((t) => t.isCompleted).length}
+        completedTodos={completedTodos.length}
       />
 
       <FolderSection
@@ -666,6 +674,7 @@ export function TodoList({
         setView={setView}
         filter={filter}
         setFilter={setFilter}
+        onHistoryClick={() => setIsHistoryOpen(true)}
       />
 
       <TodoInput
@@ -731,7 +740,14 @@ export function TodoList({
       <DayCompletionCard
         isOpen={showCompletionCard}
         onClose={() => setShowCompletionCard(false)}
-        completedCount={optimisticTodos.filter((t) => t.isCompleted).length}
+        completedCount={completedTodos.length}
+      />
+
+      <HistorySidebar
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        completedTodos={completedTodos}
+        onUndo={handleUndo}
       />
     </div>
   );
