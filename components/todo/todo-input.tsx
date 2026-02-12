@@ -247,15 +247,15 @@ export function TodoInput({
           onChange={handleImageSelect}
         />
 
-        <div className="flex flex-wrap items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50 gap-y-2">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-nowrap items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50 gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0">
             <Select
               value={priority}
               onValueChange={(v: string) =>
                 setPriority(v as "low" | "medium" | "high")
               }
             >
-              <SelectTrigger className="h-7 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200">
+              <SelectTrigger className="h-7 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1 px-2 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200 shrink-0">
                 <div
                   className={cn(
                     "w-1.5 h-1.5 rounded-full",
@@ -283,19 +283,19 @@ export function TodoInput({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-7 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                    "h-7 px-2 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 shrink-0",
                     selectedFolderId !== "inbox" &&
                       "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                   )}
                 >
                   {selectedFolderId === "inbox" ? (
                     <>
-                      <Inbox className="w-3.5 h-3.5 mr-1.5" />
-                      폴더
+                      <Inbox className="w-3.5 h-3.5 mr-1" />
+                      <span className="hidden xs:inline">폴더</span>
                     </>
                   ) : (
                     <>
-                      <FolderIcon className="w-3.5 h-3.5 mr-1.5" />
+                      <FolderIcon className="w-3.5 h-3.5 mr-1" />
                       <span className="truncate max-w-[60px] sm:max-w-[80px]">
                         {selectedFolder?.name}
                       </span>
@@ -354,13 +354,17 @@ export function TodoInput({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-7 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                    "h-7 px-2 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 shrink-0",
                     dueDate &&
                       "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                   )}
                 >
-                  <CalendarIcon className={cn("w-3.5 h-3.5 mr-1.5")} />
-                  {dueDate ? format(dueDate, "M.d", { locale: ko }) : "마감일"}
+                  <CalendarIcon className={cn("w-3.5 h-3.5 mr-1")} />
+                  {dueDate ? (
+                    format(dueDate, "M.d", { locale: ko })
+                  ) : (
+                    <span className="hidden xs:inline">마감일</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -381,14 +385,15 @@ export function TodoInput({
           <Button
             type="submit"
             disabled={isPending}
-            className="h-7 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105 shrink-0 ml-auto sm:ml-0"
+            className="h-7 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105 shrink-0 ml-auto"
           >
             {isPending ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin mr-0 sm:mr-1" />
             ) : (
-              <Plus className="w-3.5 h-3.5 mr-1" />
+              <Plus className="w-3.5 h-3.5 mr-0 sm:mr-1" />
             )}
-            추가
+            <span className="hidden sm:inline">추가</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
       </form>

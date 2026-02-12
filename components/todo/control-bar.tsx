@@ -76,24 +76,16 @@ export function ControlBar({
           )}
         </div>
 
-        {/* History Toggle (New Position) */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="hidden sm:flex items-center gap-1.5 h-9 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
-          onClick={onHistoryClick}
-        >
-          <History className="w-4 h-4" />
-          <span>완료 조각</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="sm:hidden h-9 w-9 shrink-0"
-          onClick={onHistoryClick}
-        >
-          <History className="w-4 h-4" />
-        </Button>
+        {/* History Toggle (New Position) - Styled like View Toggle */}
+        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 flex items-center shrink-0 h-9">
+          <button
+            onClick={onHistoryClick}
+            className="p-1.5 rounded-md transition-all h-7 w-7 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            title="완료 조각"
+          >
+            <History className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* View Toggle (Always Visible) */}
         <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 flex items-center shrink-0 h-9">

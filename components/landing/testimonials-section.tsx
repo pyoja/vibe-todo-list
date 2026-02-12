@@ -52,9 +52,6 @@ export function TestimonialsSection() {
         </h2>
 
         <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-zinc-50 to-transparent dark:from-zinc-950 z-20" />
-          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-zinc-50 to-transparent dark:from-zinc-950 z-20" />
-
           {/* Scrolling Container */}
           <div
             className="flex gap-8 animate-scroll hover:pause w-max pl-4 items-center"
