@@ -32,7 +32,8 @@ export function HeroSection() {
             하루를 채우는
           </span>
           <span className="block animate-text-gradient bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600 bg-[200%_auto] bg-clip-text text-transparent pb-4">
-            가장 가벼운 방법.
+            가장 가벼운
+            <br className="block md:hidden" /> 방법
           </span>
         </h1>
 

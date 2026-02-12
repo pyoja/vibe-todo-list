@@ -17,7 +17,8 @@ export function HeroMinimal() {
         >
           하루를 채우는 <br />
           <span className="text-blue-600 dark:text-blue-500 inline-block mt-2">
-            가장 가벼운 방법.
+            가장 가벼운
+            <br className="inline-block sm:hidden" /> 방법
           </span>
         </motion.h1>
 

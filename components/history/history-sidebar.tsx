@@ -3,7 +3,8 @@
 import { Todo } from "@/app/actions/todo";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { CheckCircle2, RotateCcw, X } from "lucide-react";
+import { CheckCircle2, RotateCcw, X, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { Button } from "@/components/ui/button";
 interface HistorySidebarProps {
   completedTodos: Todo[];
   onUndo: (id: string) => void;
+  onDelete: (id: string) => void;
+  onDeleteAll: () => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -18,9 +21,34 @@ interface HistorySidebarProps {
 export function HistorySidebar({
   completedTodos,
   onUndo,
+  onDelete,
+  onDeleteAll,
   isOpen,
   onClose,
 }: HistorySidebarProps) {
+  // by jh 20260213: Back button handling
+  useEffect(() => {
+    if (isOpen) {
+      // Push state when opened
+      window.history.pushState(
+        { sidebar: "history" },
+        "",
+        window.location.href,
+      );
+
+      const handlePopState = (event: PopStateEvent) => {
+        // If back button pressed, close sidebar
+        onClose();
+      };
+
+      window.addEventListener("popstate", handlePopState);
+
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [isOpen, onClose]);
+
   // Group todos by date (Simplified for "Today's Record" focus)
   // In a real app, you might cluster them by time periods (Morning, Afternoon)
 
@@ -55,21 +83,42 @@ export function HistorySidebar({
             <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50 backdrop-blur-md">
               <div>
                 <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />
                   완료 조각
                 </h2>
                 <p className="text-sm text-zinc-500 mt-1">
                   {completedTodos.length}개의 조각을 모았습니다.
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {completedTodos.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "완료된 모든 조각을 삭제하시겠습니까? (복구 불가)",
+                        )
+                      ) {
+                        onDeleteAll();
+                      }
+                    }}
+                    className="text-zinc-400 hover:text-red-500 dark:hover:text-red-400"
+                    title="전체 삭제"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onClose}
+                  className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
             {/* Timeline Content */}
@@ -107,15 +156,30 @@ export function HistorySidebar({
                           <p className="text-zinc-700 dark:text-zinc-200 font-medium line-through decoration-zinc-300 dark:decoration-zinc-600">
                             {todo.content}
                           </p>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 -mr-2 -mt-2 text-zinc-400 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => onUndo(todo.id)}
-                            title="다시 하기"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                          </Button>
+                          <div className="flex items-center gap-1 -mr-2 -mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-zinc-400 hover:text-red-500"
+                              onClick={() => {
+                                if (confirm("정말 삭제하시겠습니까?")) {
+                                  onDelete(todo.id);
+                                }
+                              }}
+                              title="삭제"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-zinc-400 hover:text-blue-500"
+                              onClick={() => onUndo(todo.id)}
+                              title="다시 하기"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
                           {todo.folderName && (

@@ -203,8 +203,8 @@ export function TodoInput({
           name="content"
           placeholder={
             view === "calendar" && selectedDate
-              ? `${format(selectedDate, "M월 d일", { locale: ko })} 어떤 하루를 만들까요? ✨`
-              : "오늘은 어떤 하루를 그리고 계신가요?"
+              ? `${format(selectedDate, "M월 d일", { locale: ko })} 오늘의 조각 ✨`
+              : "오늘의 조각"
           }
           className="border-0 focus-visible:ring-0 bg-transparent text-base sm:text-xl font-medium pl-3 min-h-[60px] placeholder:text-zinc-400 dark:placeholder:text-zinc-300 selection:bg-blue-100 dark:selection:bg-blue-900 placeholder:font-normal text-zinc-900 dark:text-zinc-100"
           autoComplete="off"
@@ -247,18 +247,18 @@ export function TodoInput({
           onChange={handleImageSelect}
         />
 
-        <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50 gap-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Select
               value={priority}
               onValueChange={(v: string) =>
                 setPriority(v as "low" | "medium" | "high")
               }
             >
-              <SelectTrigger className="h-8 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200">
+              <SelectTrigger className="h-7 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1.5 px-2.5 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200">
                 <div
                   className={cn(
-                    "w-2 h-2 rounded-full",
+                    "w-1.5 h-1.5 rounded-full",
                     priority === "high"
                       ? "bg-red-500"
                       : priority === "medium"
@@ -283,7 +283,7 @@ export function TodoInput({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                    "h-7 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
                     selectedFolderId !== "inbox" &&
                       "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                   )}
@@ -296,7 +296,7 @@ export function TodoInput({
                   ) : (
                     <>
                       <FolderIcon className="w-3.5 h-3.5 mr-1.5" />
-                      <span className="truncate max-w-[80px]">
+                      <span className="truncate max-w-[60px] sm:max-w-[80px]">
                         {selectedFolder?.name}
                       </span>
                     </>
@@ -354,15 +354,13 @@ export function TodoInput({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                    "h-7 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
                     dueDate &&
                       "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
                   )}
                 >
                   <CalendarIcon className={cn("w-3.5 h-3.5 mr-1.5")} />
-                  {dueDate
-                    ? format(dueDate, "M월 d일", { locale: ko })
-                    : "마감일"}
+                  {dueDate ? format(dueDate, "M.d", { locale: ko }) : "마감일"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -378,35 +376,12 @@ export function TodoInput({
                 />
               </PopoverContent>
             </Popover>
-
-            {/* 고려사항: 이미지 첨부 버튼 */}
-            {/* db용량 차지하는 부분이 많음. 없애야할 기능 */}
-            {/* 압축과 이미지 캐싱으로 어느정도 가능할듯 */}
-            {/* <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={isUploading}
-              onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                "h-8 px-2.5 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
-                imagePreview &&
-                  "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20",
-              )}
-              title="이미지 첨부"
-            >
-              {isUploading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <ImagePlus className="w-3.5 h-3.5" />
-              )}
-            </Button> */}
           </div>
 
           <Button
             type="submit"
             disabled={isPending}
-            className="h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-4 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105"
+            className="h-7 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105 shrink-0 ml-auto sm:ml-0"
           >
             {isPending ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />

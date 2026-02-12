@@ -286,7 +286,7 @@ export function TodoItem({
                   <input
                     ref={editInputRef}
                     defaultValue={todo.content}
-                    className="flex-1 bg-transparent border-b border-blue-500 focus:outline-none text-base sm:text-lg font-medium py-0 h-auto"
+                    className="flex-1 bg-transparent border-b border-blue-500 focus:outline-none text-base sm:text-lg font-medium py-0 h-auto text-zinc-900 dark:text-zinc-100"
                     onBlur={handleUpdateContent}
                     onKeyDown={handleKeyDown}
                     onClick={(e) => e.stopPropagation()} // Prevent drag/toggle
@@ -299,10 +299,11 @@ export function TodoItem({
                         ? "text-zinc-400 font-medium line-through decoration-zinc-400 decoration-2"
                         : "text-zinc-800 dark:text-zinc-100 font-bold",
                     )}
-                    onClick={() => onToggle(todo.id, todo.isCompleted)}
+                    onClick={(e) => e.stopPropagation()} // Stop propagation to prevent drag but DO NOT toggle
                     onDoubleClick={(e) => {
                       e.stopPropagation();
                       setIsEditing(true);
+                      // by jh 20260213: Double click to edit, single click does nothing (only checkbox toggles)
                     }}
                     title="더블 클릭하여 수정"
                   >

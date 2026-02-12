@@ -748,6 +748,22 @@ export function TodoList({
         onClose={() => setIsHistoryOpen(false)}
         completedTodos={completedTodos}
         onUndo={handleUndo}
+        onDelete={handleDelete}
+        onDeleteAll={async () => {
+          // by jh 20260213: Bulk delete completed todos
+          const ids = completedTodos.map((t) => t.id);
+          startTransition(() => {
+            ids.forEach((id) => addOptimisticTodo({ type: "delete", id }));
+          });
+
+          try {
+            await Promise.all(ids.map((id) => deleteTodo(id)));
+            toast.success("완료된 조각들이 모두 삭제되었습니다.");
+          } catch (e) {
+            console.error(e);
+            toast.error("전체 삭제 중 오류가 발생했습니다.");
+          }
+        }}
       />
     </div>
   );
