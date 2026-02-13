@@ -247,153 +247,151 @@ export function TodoInput({
           onChange={handleImageSelect}
         />
 
-        <div className="flex flex-nowrap items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50 gap-2 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap shrink-0">
-            <Select
-              value={priority}
-              onValueChange={(v: string) =>
-                setPriority(v as "low" | "medium" | "high")
-              }
-            >
-              <SelectTrigger className="h-7 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs gap-1 px-2 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200 shrink-0">
-                <div
-                  className={cn(
-                    "w-1.5 h-1.5 rounded-full",
-                    priority === "high"
-                      ? "bg-red-500"
-                      : priority === "medium"
-                        ? "bg-blue-500"
-                        : "bg-slate-400",
-                  )}
-                />
-                <SelectValue placeholder="중요도" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">낮음</SelectItem>
-                <SelectItem value="medium">보통</SelectItem>
-                <SelectItem value="high">높음</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800/50 gap-1 sm:gap-2">
+          {/* Priority Select */}
+          <Select
+            value={priority}
+            onValueChange={(v: string) =>
+              setPriority(v as "low" | "medium" | "high")
+            }
+          >
+            <SelectTrigger className="flex-1 justify-center h-7 border-transparent bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[10px] sm:text-xs gap-1 px-0 sm:px-2 rounded-full transition-colors focus:ring-0 text-zinc-900 dark:text-zinc-200">
+              <div
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  priority === "high"
+                    ? "bg-red-500"
+                    : priority === "medium"
+                      ? "bg-blue-500"
+                      : "bg-slate-400",
+                )}
+              />
+              <SelectValue placeholder="중요도" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">낮음</SelectItem>
+              <SelectItem value="medium">보통</SelectItem>
+              <SelectItem value="high">높음</SelectItem>
+            </SelectContent>
+          </Select>
 
-            {/* Folder Selection Popover */}
-            <Popover open={isFolderOpen} onOpenChange={setIsFolderOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-7 px-2 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 shrink-0",
-                    selectedFolderId !== "inbox" &&
-                      "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
-                  )}
-                >
-                  {selectedFolderId === "inbox" ? (
-                    <>
-                      <Inbox className="w-3.5 h-3.5 mr-1" />
-                      <span className="hidden xs:inline">폴더</span>
-                    </>
-                  ) : (
-                    <>
-                      <FolderIcon className="w-3.5 h-3.5 mr-1" />
-                      <span className="truncate max-w-[60px] sm:max-w-[80px]">
-                        {selectedFolder?.name}
-                      </span>
-                    </>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="폴더 검색..." />
-                  <CommandList>
-                    <CommandEmpty>폴더가 없습니다.</CommandEmpty>
-                    <CommandGroup>
+          {/* Folder Selection Popover */}
+          <Popover open={isFolderOpen} onOpenChange={setIsFolderOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "flex-1 justify-center h-7 px-0 sm:px-2 text-[10px] sm:text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                  selectedFolderId !== "inbox" &&
+                    "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+                )}
+              >
+                {selectedFolderId === "inbox" ? (
+                  <>
+                    <Inbox className="w-3.5 h-3.5 mr-1" />
+                    <span>폴더</span>
+                  </>
+                ) : (
+                  <>
+                    <FolderIcon className="w-3.5 h-3.5 mr-1" />
+                    <span className="truncate max-w-[50px] sm:max-w-[80px]">
+                      {selectedFolder?.name}
+                    </span>
+                  </>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0" align="start">
+              <Command>
+                <CommandInput placeholder="폴더 검색..." />
+                <CommandList>
+                  <CommandEmpty>폴더가 없습니다.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      value="inbox"
+                      onSelect={() => {
+                        setSelectedFolderId("inbox");
+                        setIsFolderOpen(false);
+                      }}
+                    >
+                      <Inbox className="mr-2 h-4 w-4" />
+                      <span>폴더 (미지정)</span>
+                      {selectedFolderId === "inbox" && (
+                        <Check className="ml-auto h-4 w-4" />
+                      )}
+                    </CommandItem>
+                    {folders.map((folder) => (
                       <CommandItem
-                        value="inbox"
+                        key={folder.id}
+                        value={folder.name}
                         onSelect={() => {
-                          setSelectedFolderId("inbox");
+                          setSelectedFolderId(folder.id);
                           setIsFolderOpen(false);
                         }}
                       >
-                        <Inbox className="mr-2 h-4 w-4" />
-                        <span>폴더 (미지정)</span>
-                        {selectedFolderId === "inbox" && (
+                        <FolderIcon
+                          className={`mr-2 h-4 w-4 text-${folder.color}`}
+                        />
+                        <span>{folder.name}</span>
+                        {selectedFolderId === folder.id && (
                           <Check className="ml-auto h-4 w-4" />
                         )}
                       </CommandItem>
-                      {folders.map((folder) => (
-                        <CommandItem
-                          key={folder.id}
-                          value={folder.name}
-                          onSelect={() => {
-                            setSelectedFolderId(folder.id);
-                            setIsFolderOpen(false);
-                          }}
-                        >
-                          <FolderIcon
-                            className={`mr-2 h-4 w-4 text-${folder.color}`}
-                          />
-                          <span>{folder.name}</span>
-                          {selectedFolderId === folder.id && (
-                            <Check className="ml-auto h-4 w-4" />
-                          )}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
 
-            {/* by jh 20260210: Date Picker - 캘린더 뷰에서도 마감일 피커 표시 */}
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-7 px-2 text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 shrink-0",
-                    dueDate &&
-                      "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
-                  )}
-                >
-                  <CalendarIcon className={cn("w-3.5 h-3.5 mr-1")} />
-                  {dueDate ? (
-                    format(dueDate, "M.d", { locale: ko })
-                  ) : (
-                    <span className="hidden xs:inline">마감일</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={dueDate}
-                  onSelect={(date) => {
-                    setDueDate(date);
-                    setIsCalendarOpen(false);
-                  }}
-                  initialFocus
-                  locale={ko}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          {/* Date Picker */}
+          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "flex-1 justify-center h-7 px-0 sm:px-2 text-[10px] sm:text-xs rounded-full bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300",
+                  dueDate &&
+                    "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+                )}
+              >
+                <CalendarIcon className={cn("w-3.5 h-3.5 mr-1")} />
+                {dueDate ? (
+                  format(dueDate, "M.d", { locale: ko })
+                ) : (
+                  <span>마감일</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dueDate}
+                onSelect={(date) => {
+                  setDueDate(date);
+                  setIsCalendarOpen(false);
+                }}
+                initialFocus
+                locale={ko}
+              />
+            </PopoverContent>
+          </Popover>
 
           <Button
             type="submit"
             disabled={isPending}
-            className="h-7 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3 text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105 shrink-0 ml-auto"
+            className="flex-1 justify-center h-7 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-0 sm:px-3 text-[10px] sm:text-xs font-semibold shadow-md shadow-blue-500/20 transition-all hover:scale-105"
           >
             {isPending ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin mr-0 sm:mr-1" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
             ) : (
-              <Plus className="w-3.5 h-3.5 mr-0 sm:mr-1" />
+              <Plus className="w-3.5 h-3.5 mr-1" />
             )}
-            <span className="hidden sm:inline">추가</span>
-            <span className="sm:hidden">Add</span>
+            <span>추가</span>
           </Button>
         </div>
       </form>
