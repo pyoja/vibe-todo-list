@@ -113,20 +113,41 @@ export async function updateTodo(
   if (!session) throw new Error("Unauthorized");
 
   try {
-    // 동적 쿼리 생성
-    const fields = Object.keys(updates).filter(
-      (key) => key !== "id" && key !== "userId",
-    );
-    if (fields.length === 0) return;
+    // by jh 20260225: DB 컬럼 매핑 정보 (camelCase -> Snake_case 또는 Quoted CamelCase)
+    const fieldMapping: Record<string, string> = {
+      content: "content",
+      isCompleted: '"isCompleted"',
+      folderId: '"folderId"',
+      priority: "priority",
+      dueDate: '"dueDate"',
+      tags: "tags",
+      imageUrl: "image_url", // DB 컬럼명이 image_url이므로 매핑 필수
+      order: '"order"',
+      isRecurring: '"isRecurring"',
+      recurrencePattern: '"recurrencePattern"',
+      recurrenceInterval: '"recurrenceInterval"',
+    };
 
-    // TypeScript 타입 가드 대신 명시적 캐스팅을 피하기 위해 인덱스 기반 접근 사용
-    const setClause = fields
-      .map((field, idx) => `"${field}" = $${idx + 1}`)
+    // DB에 존재하는 실제 컬럼만 필터링 (folderName, subTodos 등 제외)
+    const validFields = Object.keys(updates).filter(
+      (key) =>
+        key in fieldMapping &&
+        key !== "id" &&
+        key !== "userId" &&
+        key !== "createdAt",
+    );
+
+    if (validFields.length === 0) return;
+
+    const setClause = validFields
+      .map((field, idx) => `${fieldMapping[field]} = $${idx + 1}`)
       .join(", ");
-    const values = fields.map(
+
+    const values = validFields.map(
       (field) => updates[field as keyof typeof updates],
     );
-    const query = `UPDATE todo SET ${setClause} WHERE id = $${fields.length + 1} AND "userId" = $${fields.length + 2} RETURNING *`;
+
+    const query = `UPDATE todo SET ${setClause} WHERE id = $${validFields.length + 1} AND "userId" = $${validFields.length + 2} RETURNING *`;
 
     const res = await pool.query(query, [...values, id, session.user.id]);
     revalidatePath("/");
