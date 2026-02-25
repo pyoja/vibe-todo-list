@@ -97,7 +97,7 @@ export async function createTodo(
         imageUrl || null,
       ],
     );
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to create todo:", error);
@@ -150,7 +150,7 @@ export async function updateTodo(
     const query = `UPDATE todo SET ${setClause} WHERE id = $${validFields.length + 1} AND "userId" = $${validFields.length + 2} RETURNING *`;
 
     const res = await pool.query(query, [...values, id, session.user.id]);
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to update todo:", error);
@@ -176,7 +176,7 @@ export async function deleteTodo(id: string) {
       'UPDATE todo SET "deleted_at" = NOW() WHERE id = $1 AND "userId" = $2 RETURNING *',
       [id, session.user.id],
     );
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to delete todo:", error);
@@ -195,7 +195,7 @@ export async function restoreTodo(todo: Todo) {
       'UPDATE todo SET "deleted_at" = NULL WHERE id = $1 AND "userId" = $2 RETURNING *',
       [todo.id, session.user.id],
     );
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to restore todo:", error);
@@ -234,7 +234,7 @@ export async function permanentDeleteTodo(id: string) {
       id,
       session.user.id,
     ]);
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
   } catch (error) {
     console.error("Failed to permanently delete todo:", error);
     throw new Error("Failed to permanently delete todo");
@@ -255,7 +255,7 @@ export async function reorderTodos(items: { id: string; order: number }[]) {
         ),
       ),
     );
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
   } catch (error) {
     console.error("Failed to reorder todos:", error);
     throw new Error("Failed to reorder todos");
@@ -304,7 +304,7 @@ export async function emptyTrash() {
       [session.user.id],
     );
 
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
   } catch (error) {
     console.error("Failed to empty trash:", error);
     throw new Error("Failed to empty trash");

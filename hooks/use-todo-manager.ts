@@ -1,7 +1,17 @@
-import { useRef } from "react";
 import { type Todo } from "@/app/actions/todo";
-import * as serverActions from "@/app/actions/todo";
-import * as subTodoActions from "@/app/actions/subtodo";
+import {
+  createTodo as createTodoAction,
+  toggleTodo as toggleTodoAction,
+  updateTodo as updateTodoAction,
+  deleteTodo as deleteTodoAction,
+  restoreTodo as restoreTodoAction,
+  reorderTodos as reorderTodosAction,
+} from "@/app/actions/todo";
+import {
+  createSubTodo as createSubTodoAction,
+  toggleSubTodo as toggleSubTodoAction,
+  deleteSubTodo as deleteSubTodoAction,
+} from "@/app/actions/subtodo";
 
 type TodoManagerProps = {
   initialTodos: Todo[];
@@ -24,7 +34,7 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     // by jh 20260210: 이미지 URL 파라미터 추가
     imageUrl?: string | null,
   ) => {
-    return await serverActions.createTodo(
+    return await createTodoAction(
       content,
       folderId,
       priority,
@@ -35,25 +45,25 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
   };
 
   const toggleTodo = async (id: string, isCompleted: boolean) => {
-    await serverActions.toggleTodo(id, isCompleted);
+    await toggleTodoAction(id, isCompleted);
   };
 
   const updateTodo = async (id: string, updates: Partial<Todo>) => {
-    await serverActions.updateTodo(id, updates);
+    await updateTodoAction(id, updates);
   };
 
   const deleteTodo = async (id: string) => {
-    return await serverActions.deleteTodo(id);
+    return await deleteTodoAction(id);
   };
 
   const restoreTodo = async (todo: Todo) => {
-    await serverActions.restoreTodo(todo);
+    await restoreTodoAction(todo);
   };
 
   // --- SubTodo Operations ---
 
   const addSubTodo = async (todoId: string, content: string) => {
-    return await subTodoActions.createSubTodo(todoId, content);
+    return await createSubTodoAction(todoId, content);
   };
 
   const toggleSubTodo = async (
@@ -61,15 +71,15 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     subTodoId: string,
     isCompleted: boolean,
   ) => {
-    await subTodoActions.toggleSubTodo(subTodoId, isCompleted);
+    await toggleSubTodoAction(subTodoId, isCompleted);
   };
 
   const deleteSubTodo = async (todoId: string, subTodoId: string) => {
-    await subTodoActions.deleteSubTodo(subTodoId);
+    await deleteSubTodoAction(subTodoId);
   };
 
   const reorderTodos = async (items: { id: string; order: number }[]) => {
-    await serverActions.reorderTodos(items);
+    await reorderTodosAction(items);
   };
 
   return {

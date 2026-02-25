@@ -29,7 +29,15 @@ export async function getSubTodos(todoId: string): Promise<SubTodo[]> {
       'SELECT * FROM sub_todo WHERE "todoId" = $1 ORDER BY "order" ASC, "createdAt" ASC',
       [todoId],
     );
-    return res.rows;
+    return res.rows.map((row) => ({
+      id: row.id,
+      todoId: row.todoId,
+      content: row.content,
+      isCompleted: row.isCompleted,
+      createdAt: row.createdAt,
+      order: row.order,
+      imageUrl: row.image_url,
+    }));
   } catch (error) {
     console.error("Failed to fetch sub_todos:", error);
     return [];
@@ -58,8 +66,20 @@ export async function createSubTodo(
       'INSERT INTO sub_todo ("todoId", content, "order", image_url) VALUES ($1, $2, (SELECT COALESCE(MAX("order"), 0) + 1 FROM sub_todo WHERE "todoId" = $1), $3) RETURNING *',
       [todoId, content, imageUrl || null],
     );
-    revalidatePath("/");
-    return res.rows[0];
+
+    const row = res.rows[0];
+    const mappedSubTodo: SubTodo = {
+      id: row.id,
+      todoId: row.todoId,
+      content: row.content,
+      isCompleted: row.isCompleted,
+      createdAt: row.createdAt,
+      order: row.order,
+      imageUrl: row.image_url,
+    };
+
+    revalidatePath("/todo", "page");
+    return mappedSubTodo;
   } catch (error) {
     console.error("Failed to create sub_todo:", error);
     throw new Error("Failed to create sub_todo");
@@ -75,7 +95,7 @@ export async function toggleSubTodo(id: string, isCompleted: boolean) {
       'UPDATE sub_todo SET "isCompleted" = $1 WHERE id = $2 RETURNING *',
       [isCompleted, id],
     );
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to toggle sub_todo:", error);
@@ -92,7 +112,7 @@ export async function deleteSubTodo(id: string) {
       "DELETE FROM sub_todo WHERE id = $1 RETURNING *",
       [id],
     );
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to delete sub_todo:", error);
@@ -113,7 +133,7 @@ export async function updateSubTodo(
       'UPDATE sub_todo SET content = $1 WHERE id = $2 AND "todoId" = $3 RETURNING *',
       [content, id, todoId],
     );
-    revalidatePath("/");
+    revalidatePath("/todo", "page");
     return res.rows[0];
   } catch (error) {
     console.error("Failed to update sub_todo:", error);
