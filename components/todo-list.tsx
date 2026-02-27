@@ -80,7 +80,8 @@ type OptimisticAction =
       todoId: string;
       subTodoId: string;
       content: string;
-    };
+    }
+  | { type: "reorderSubTodos"; todoId: string; newSubTodos: SubTodo[] };
 
 export function TodoList({
   initialTodos,
@@ -140,6 +141,7 @@ export function TodoList({
     addSubTodo,
     toggleSubTodo,
     deleteSubTodo,
+    reorderSubTodos,
   } = useTodoManager({ initialTodos, userId: user?.id, folderId });
 
   const [optimisticTodos, addOptimisticTodo] = useOptimistic(
@@ -208,6 +210,13 @@ export function TodoList({
                       : st,
                   ),
                 }
+              : t,
+          );
+        }
+        if (newTodo.type === "reorderSubTodos") {
+          return state.map((t) =>
+            t.id === newTodo.todoId
+              ? { ...t, subTodos: newTodo.newSubTodos }
               : t,
           );
         }
@@ -576,6 +585,31 @@ export function TodoList({
     }
   };
 
+  const handleReorderSubTodos = async (
+    todoId: string,
+    newSubTodos: SubTodo[],
+  ) => {
+    startTransition(() => {
+      addOptimisticTodo({
+        type: "reorderSubTodos",
+        todoId,
+        newSubTodos,
+      });
+    });
+
+    const updates = newSubTodos.map((st, index) => ({
+      id: st.id,
+      order: (index + 1) * 1000,
+    }));
+
+    try {
+      await reorderSubTodos(updates);
+    } catch (e) {
+      console.error("SubTodo Reorder failed", e);
+      toast.error("하위 항목 순서 저장에 실패했습니다.");
+    }
+  };
+
   // Guest Folder State
   const activeFolders = folders;
 
@@ -721,6 +755,7 @@ export function TodoList({
         onToggleSubTodo={handleToggleSubTodo}
         onDeleteSubTodo={handleDeleteSubTodo}
         onUpdateSubTodo={handleUpdateSubTodo}
+        onReorderSubTodos={handleReorderSubTodos}
         defaultDate={today}
         folderId={folderId}
       />

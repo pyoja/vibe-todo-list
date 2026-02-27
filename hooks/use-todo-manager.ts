@@ -11,6 +11,7 @@ import {
   createSubTodo as createSubTodoAction,
   toggleSubTodo as toggleSubTodoAction,
   deleteSubTodo as deleteSubTodoAction,
+  reorderSubTodos as reorderSubTodosAction,
 } from "@/app/actions/subtodo";
 
 type TodoManagerProps = {
@@ -78,6 +79,10 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     await deleteSubTodoAction(subTodoId);
   };
 
+  const reorderSubTodos = async (items: { id: string; order: number }[]) => {
+    await reorderSubTodosAction(items);
+  };
+
   const reorderTodos = async (items: { id: string; order: number }[]) => {
     await reorderTodosAction(items);
   };
@@ -93,5 +98,6 @@ export function useTodoManager({ initialTodos, userId }: TodoManagerProps) {
     addSubTodo,
     toggleSubTodo,
     deleteSubTodo,
+    reorderSubTodos,
   };
 }

@@ -40,6 +40,7 @@ import { format, isToday, isTomorrow, isPast } from "date-fns";
 import { ko } from "date-fns/locale";
 import type { Todo } from "@/app/actions/todo";
 import type { Folder } from "@/app/actions/folder";
+import type { SubTodo } from "@/app/actions/subtodo";
 import { SubTodoList } from "@/components/sub-todo-list";
 import { useState, useRef, useEffect } from "react";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
@@ -79,6 +80,7 @@ interface SortableTodoItemProps {
   ) => void;
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
   onUpdateSubTodo: (todoId: string, subTodoId: string, content: string) => void;
+  onReorderSubTodos: (todoId: string, newSubTodos: SubTodo[]) => void;
 }
 
 // Separate component to avoid "Cannot create components during render" error
@@ -144,6 +146,7 @@ export function TodoItem({
   onToggleSubTodo,
   onDeleteSubTodo,
   onUpdateSubTodo,
+  onReorderSubTodos,
   style,
   attributes,
   listeners,
@@ -576,6 +579,7 @@ export function TodoItem({
             onToggle={onToggleSubTodo}
             onDelete={onDeleteSubTodo}
             onUpdate={onUpdateSubTodo}
+            onReorder={onReorderSubTodos}
           />
         )}
 

@@ -140,3 +140,34 @@ export async function updateSubTodo(
     throw new Error("Failed to update sub_todo");
   }
 }
+
+// by jh 20260227: SubTodo 순서 변경
+export async function reorderSubTodos(items: { id: string; order: number }[]) {
+  const session = await getSession();
+  if (!session) throw new Error("Unauthorized");
+
+  try {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      for (const item of items) {
+        await client.query('UPDATE sub_todo SET "order" = $1 WHERE id = $2', [
+          item.order,
+          item.id,
+        ]);
+      }
+
+      await client.query("COMMIT");
+      revalidatePath("/todo", "page");
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("Failed to reorder sub_todos:", error);
+    throw new Error("Failed to reorder sub_todos");
+  }
+}

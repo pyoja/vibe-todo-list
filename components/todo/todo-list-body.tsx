@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { type Todo } from "@/app/actions/todo";
 import { type Folder } from "@/app/actions/folder";
+import { type SubTodo } from "@/app/actions/subtodo";
 
 interface TodoListBodyProps {
   view: "list" | "calendar";
@@ -51,6 +52,7 @@ interface TodoListBodyProps {
   ) => void;
   onDeleteSubTodo: (todoId: string, subTodoId: string) => void;
   onUpdateSubTodo: (todoId: string, subTodoId: string, content: string) => void;
+  onReorderSubTodos: (todoId: string, newSubTodos: SubTodo[]) => void;
   defaultDate?: Date;
   // by jh 20260210: 마감일 미지정 패널에서 폴더 필터 적용용
   folderId?: string;
@@ -77,6 +79,7 @@ export function TodoListBody({
   onToggleSubTodo,
   onDeleteSubTodo,
   onUpdateSubTodo,
+  onReorderSubTodos,
   defaultDate,
   folderId,
 }: TodoListBodyProps) {
@@ -176,6 +179,7 @@ export function TodoListBody({
                             onToggleSubTodo={onToggleSubTodo}
                             onDeleteSubTodo={onDeleteSubTodo}
                             onUpdateSubTodo={onUpdateSubTodo}
+                            onReorderSubTodos={onReorderSubTodos}
                           />
                         ))}
                       </div>
@@ -232,6 +236,7 @@ export function TodoListBody({
                         onToggleSubTodo={onToggleSubTodo}
                         onDeleteSubTodo={onDeleteSubTodo}
                         onUpdateSubTodo={onUpdateSubTodo}
+                        onReorderSubTodos={onReorderSubTodos}
                       />
                     ))}
                   </div>
@@ -266,6 +271,7 @@ export function TodoListBody({
                       onToggleSubTodo={onToggleSubTodo}
                       onDeleteSubTodo={onDeleteSubTodo}
                       onUpdateSubTodo={onUpdateSubTodo}
+                      onReorderSubTodos={onReorderSubTodos}
                     />
                   ))}
                 </SortableContext>
@@ -289,6 +295,7 @@ export function TodoListBody({
               onToggleSubTodo={() => {}}
               onDeleteSubTodo={() => {}}
               onUpdateSubTodo={() => {}}
+              onReorderSubTodos={() => {}}
               isOverlay
             />
           ) : null}
